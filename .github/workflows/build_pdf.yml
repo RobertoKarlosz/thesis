@@ -22,7 +22,7 @@ jobs:
         run: mv thesis.pdf built_thesis.pdf
 
       - name: Upload PDF
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: pdf
           path: built_thesis.pdf
