@@ -1,0 +1,75 @@
+%----------------------------------------------------------------------------
+\chapter{\bevezetes}
+%----------------------------------------------------------------------------
+
+A kriptográfia hosszú ideje kulcsfontosságú szerepet tölt be az információbiztonság terén, de a fejlődő
+technológia és a kvantumszámítógépek egyre nagyobb veszélyt jelentenek a ma használt protokollokra. A
+klasszikus kriptográfiai algoritmusok sebezhetővé váltak a kvantumszámítógépek által nyújtott bruteforce
+támadásokkal szemben. Ezért egyre sürgősebbé vált a posztkvantum-kriptográfiai megoldások kutatása és
+fejlesztése, amelyek képesek megfelelni a jövőbeni biztonsági követelményeknek.
+
+Beszámolóm ezen a téren végzett kutatásokat fogja elemezni, különös hangsúlyt fektetve a CRYSTALS
+KYBER és DILITHIUM protokollokra. Ezek a jelenleg ismert legbiztonságosabb eljárásokat használják,
+emiatt a későbbiekben a standard biztonsági szintet fogják jelenteni információbiztonság területén.
+
+Először is, megvizsgálom a posztkvantum-kriptográfiai alapelveket, hogy megértsük, hogyan
+különböznek a hagyományos kriptográfiától. Ezt követően részletesen bemutatom a CRYSTALS KYBER
+protokollt, amely a rejtjelrendszer és a kulcscsere terén nyújt hatékony és biztonságos megoldást. Továbbá
+elemzem a protokoll algoritmusát, valamint a kvantumszámítógépek elleni ellenálló képességét és
+biztonsági tulajdonságait.
+
+Ezenkívül a CRYSTALS DILITHIUM protokollt is részletesen elemzem, amely egy másik jelentős
+posztkvantum-kriptográfiai megoldás. Kitérek a kulcskészítés, a kulcscsere, valamint az üzenet
+titkosításának és visszafejtésének folyamatára.
+
+Végül összehasonlítom a CRYSTALS KYBER és DILITHIUM protokollokat, kiemelve előnyeiket és
+korlátjaikat.
+
+
+Összességében, a posztkvantum-kriptográfiai megoldások, különösen a CRYSTALS KYBER és
+DILITHIUM protokollok, ígéretes fejleményeket kínálnak a kriptográfiai védelem terén. Ezek a
+megoldások lehetővé teszik a biztonságos kommunikációt és adatvédelmet még a kvantumszámítógépek
+korában is.
+
+\section{Posztkvantum-kriptográfiai alapelvek}
+
+A posztkvantum-kriptográfia a kriptográfiai megoldások olyan paradigmáját jelenti, amelyek ellenállnak a
+kvantumszámítógépek által nyújtott támadásoknak. Míg a hagyományos kriptográfiai algoritmusok
+sebezhetővé váltak a kvantumalapú támadásokkal szemben, a posztkvantum-kriptográfia azon elveken
+alapul, amelyeket még a kvantumszámítógépek korában is biztonságosnak tekintünk.
+
+Az egyik alapelv a kvantumszámítógépek által használt algoritmusok ellenálló képessége. A
+posztkvantum-kriptográfiában olyan algoritmusokat fejlesztünk, amelyek még a legerősebb
+kvantumszámítógépekkel sem törhetőek fel. Ez magában foglalja a hagyományos kriptográfiai
+algoritmusok módosítását vagy új, posztkvantum-kompatibilis algoritmusok létrehozását.
+
+A másik alapelv a kvantumszámítógépek által használt matematikai alapok ellenálló képessége. A
+posztkvantum-kriptográfia a matematikai problémákra és rendszerekre támaszkodik, amelyek ellenállnak
+a kvantumalapú támadásoknak. Ezek közé tartozik például a rács alapú titkosítás és az LWE séma is.
+
+\section{A rács alapú titkosítás}
+
+A rács alapú titkosítás egy olyan posztkvantum-kriptográfiai megoldás, amely a rácselméletre és a
+rácsokra épül. A rácsok matematikai struktúrák, amelyeket a rácselmélet tanulmányoz. Ezek a struktúrák
+lehetővé teszik a hatékony és biztonságos titkosítást és kulcscserét.
+
+A rács alapú titkosítás fő elve a rácspontokon alapuló matematikai műveletek használata. A rácspontok
+olyan pontok a rácsban, amelyeket a bázisvektorok lineáris kombinációja alkot. Így az egyik alapvető
+probléma lehet a SVP (Shortest Vectro Problem), ami az origóhoz eső legközelebbi pontot keresi. Ez
+nagyobb dimenziójú rácsoknál nem triviális és a bázisok megfelelő választásakor a megtalálás is kellően
+nehezíthető, NP nehézzé tehető.
+
+Más ismert rácselméleti probléma még a CVP (Closest Vector Problem), ami egy kitüntetett ponthoz
+keresi a legközelebb eső rácspontot. Ez a probléma karpredukálható SVP-re, azaz ez is használható
+posztkvantum algoritmusokban
+
+\section{Az LWE séma}
+Az LWE (Learning With Errors) séma egy konkrét rács alapú titkosítási megoldás a posztkvantumkriptográfia területén. Ez a séma az LWE problémára épül, amely egy matematikai probléma a
+rácselméletben.
+
+Az LWE séma alapelve az, hogy az adatokat hibákkal terheljük, és ezeket a hibákat a támadó nem tudja
+hatékonyan kiküszöbölni. Vevő oldalon viszont az ismert hibával számolva könnyen visszafejthetünk egy
+üzenetet.
+
+Az LWE probléma megoldása alapján a séma biztonságos titkosítást és kulcscserét tesz lehetővé a
+kvantumszámítógépek ellen.

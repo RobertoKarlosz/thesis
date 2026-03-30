@@ -1,0 +1,25 @@
+\select@language {magyar} \contentsline {chapter}{Kivonat}{i}{chapter*.2}%
+\select@language {english} \contentsline {chapter}{Abstract}{ii}{chapter*.3}%
+\select@language {magyar} \contentsline {chapter}{\numberline {1}Bevezetés}{1}{chapter.1}%
+\select@language {magyar} \contentsline {section}{\numberline {1.1}Posztkvantum-kriptográfiai alapelvek}{1}{section.1.1}%
+\select@language {magyar} \contentsline {section}{\numberline {1.2}A rács alapú titkosítás}{2}{section.1.2}%
+\select@language {magyar} \contentsline {section}{\numberline {1.3}Az LWE séma}{2}{section.1.3}%
+\select@language {magyar} \contentsline {chapter}{\numberline {2}Protokollok ismertetése}{3}{chapter.2}%
+\select@language {magyar} \contentsline {section}{\numberline {2.1}Kyber protocoll}{3}{section.2.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.1.1}Paraméterek és kulcskészítés}{3}{subsection.2.1.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.1.2}Üzenet titkosítása}{3}{subsection.2.1.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.1.3}Titkosítás visszafejtése}{3}{subsection.2.1.3}%
+\select@language {magyar} \contentsline {section}{\numberline {2.2}Kriptográfiai protokollok}{4}{section.2.2}%
+\select@language {magyar} \contentsline {section}{\numberline {2.3}CRYSTALS-Kyber protokoll}{4}{section.2.3}%
+\select@language {magyar} \contentsline {section}{\numberline {2.4}BIKE protokoll}{4}{section.2.4}%
+\select@language {magyar} \contentsline {chapter}{\numberline {3}Környezet}{5}{chapter.3}%
+\select@language {magyar} \contentsline {chapter}{\numberline {4}Mérés metodotógia}{6}{chapter.4}%
+\select@language {magyar} \contentsline {chapter}{\numberline {5}Mérés}{7}{chapter.5}%
+\select@language {magyar} \contentsline {chapter}{\numberline {6}Eredények}{8}{chapter.6}%
+\select@language {magyar} \contentsline {chapter}{\numberline {7}Javaslatok}{9}{chapter.7}%
+\select@language {magyar} \contentsline {chapter}{Köszönetnyilvánítás}{10}{chapter*.4}%
+\select@language {magyar} \contentsline {chapter}{Irodalomjegyz\'ek}{11}{chapter*.4}%
+\select@language {magyar} \contentsline {chapter}{Függelék}{12}{appendix*.6}%
+\select@language {magyar} \contentsline {section}{\numberline {F.1}Nyilatkozat generatív mesterséges intelligencia alkalmazásáról}{12}{section.F.1}%
+\select@language {magyar} \contentsline {section}{\numberline {F.2}A TeXstudio felülete}{13}{section.F.2}%
+\select@language {magyar} \contentsline {section}{\numberline {F.3}Válasz az ,,Élet, a világmindenség, meg minden'' kérdésére}{14}{section.F.3}%

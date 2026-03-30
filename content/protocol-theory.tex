@@ -1,0 +1,44 @@
+\chapter{Protokollok ismertetése}
+
+\section{Kyber protocoll}
+
+A CRYSTALS KYBER protokoll a posztkvantum-kriptográfia egyik jelentős megoldása, amely a NIST
+által írt elemzések alapján biztonságosak. Ez a protokoll a rács alapú titkosításra épül, amit LWE
+alapokon valósít meg, és számos biztonsági tulajdonsággal rendelkezik, amelyek lehetővé teszik a
+megbízható és titkos kommunikációt.
+
+A KYBER protokoll alapvetően három fő részből áll: a kulcskészítés és kulcscsere folyamatából, az
+üzenet titkosításából és az üzenet visszafejtéséből.
+
+\subsection{Paraméterek és kulcskészítés}
+
+A kulcskészítés folyamatának első lépése a paraméterek inicializálása. Ez magában foglalja a rács
+paramétereinek és a biztonsági szintnek a meghatározását. A KYBER protokoll különböző biztonsági
+szinteket kínál, amelyek lehetővé teszik a felhasználók számára a megfelelő szintű védelem kiválasztását.
+
+A kulcskészítés során a Alice (a fogadó fél) elkészíti a privát és publikus kulcsokat. A privát kulcs lesz az
+s vektor, a publikus pedig az A mátrix és a t vektor. Ez így az LWE séma kulcsgenerálási folyamata
+
+\subsection{Üzenet titkosítása}
+A Bob (a küldő fél) az Alice publikus kulcsát használja az üzenet titkosításához. A Bob egy véletlenszerű vektort generál, majd a publikus kulcsot használva létrehozza a titkosított üzenetet. Ez a folyamat magában foglalja a rács alapú műveleteket és a hibák hozzáadását, hogy biztosítsa a titkosítás biztonságát.
+
+Az üzenet titkosításakor Bob (a küldő fél) egy saját titkos kulcs segítségével és újabb hibavektorokkal
+titkosítja üzenetét, amely az u és v vektorok lesznek.
+
+\subsection{Titkosítás visszafejtése}
+
+Visszafejtéskor Alice a titkos kulcsát felhasználva megkapja az üzenetet és egy hibavektort, amit a bázis
+ismeretében a megfelelő értékre le tudja kerekíteni.
+
+Az algoritmus hatékonysága és teljesítménye azt jelenti, hogy a KYBER protokoll képes-e a valós
+környezetben megfelelő sebességgel és erőforrásokkal működni. Ez kritikus fontosságú a gyakorlati
+alkalmazások szempontjából, mivel az információvédelem mellett a protokoll gyors és hatékony
+működését is biztosítania kell.
+
+
+\section{Kriptográfiai protokollok}
+Először a Kyber protokollt mutatjuk be, amely egy posztkvantum kriptográfiai megoldás, és a dolgozatban az IoT rendszerek biztonságának megerősítésére alkalmazzuk. Részletesen ismertetjük a Kyber működését, beleértve a kulcscserét és az üzenet titkosítását, valamint a protokoll biztonsági tulajdonságait. Ezután bemutatjuk a BIKE protokollt, amely szintén egy posztkvantum kriptográfiai megoldás, és a dolgozatban a Kyber protokoll alternatívájaként szerepel. Ismertetjük a BIKE működését, beleértve a kulcscserét és az üzenet titkosítását, valamint a protokoll biztonsági tulajdonságait. Végül összehasonlítjuk a Kyber és a BIKE protokollokat, kiemelve előnyeiket és hátrányaikat az IoT rendszerek biztonságának megerősítése szempontjából.
+
+\section{CRYSTALS-Kyber protokoll}
+
+\section{BIKE protokoll}
