@@ -22,4 +22,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pdf
-          path: thesis.pdf
+          path: builed_thesis.pdf
