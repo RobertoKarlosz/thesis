@@ -1,1 +1,347 @@
 \chapter{Mérés metodotógia}
+
+\section{Mosquitto alapú MQTT laboratóriumi környezet kialakítása posztkvantum kriptográfiai támogatással}
+
+\subsection{Bevezetés}
+
+Az Internet of Things (IoT) rendszerek terjedésével egyre nagyobb jelentősége van a könnyűsúlyú és megbízható kommunikációs protokolloknak. Az egyik legelterjedtebb ilyen protokoll az MQTT (Message Queuing Telemetry Transport), amelyet kifejezetten kis erőforrásigényű eszközök és instabil hálózati kapcsolatok számára terveztek. Az MQTT protokoll publish-subscribe kommunikációs modellt használ, amely lehetővé teszi, hogy az eszközök közvetlen kapcsolat nélkül, egy központi broker segítségével kommunikáljanak egymással.
+
+Az MQTT széles körben alkalmazott technológia okosotthon rendszerekben, ipari automatizálásban, szenzorhálózatokban és edge computing környezetekben. Mivel az ilyen rendszerek gyakran érzékeny adatokat továbbítanak, kiemelt szerepe van a biztonságos kommunikációnak. Jelenleg a legtöbb TLS-alapú kommunikáció hagyományos nyilvános kulcsú algoritmusokra, például RSA-ra vagy elliptikus görbéken alapuló kriptográfiára épül. Ezeket a megoldásokat azonban a jövőben veszélyeztethetik a kvantumszámítógépek.
+
+A posztkvantum kriptográfia (Post-Quantum Cryptography -- PQC) olyan algoritmusok fejlesztésével foglalkozik, amelyek ellenállnak a kvantumszámítógépek támadásainak is. Az Amerikai Szabványügyi és Technológiai Intézet (NIST) több évig tartó standardizációs folyamat során választotta ki azokat az algoritmusokat, amelyek várhatóan a jövő kvantumbiztos rendszereinek alapját képezik majd. Ezek közé tartozik például az ML-KEM (korábban Kyber) és az ML-DSA (korábban Dilithium).
+
+A laboratóriumi környezet célja egy olyan MQTT infrastruktúra kialakítása volt, amelyben a kommunikáció TLS kapcsolaton keresztül, posztkvantum algoritmusok támogatásával valósul meg. A labor lehetővé teszi a PQC algoritmusok gyakorlati tesztelését, kompatibilitási vizsgálatát, valamint későbbi teljesítménymérések végrehajtását.
+
+\subsection{A labor célja és architektúrája}
+
+A labor célja egy reprodukálható, izolált MQTT tesztkörnyezet létrehozása volt, amely támogatja a posztkvantum kriptográfiai algoritmusok használatát TLS kapcsolatokban.
+
+A kialakított környezet fő komponensei:
+
+\begin{itemize}
+    \item Ubuntu Linux alapú rendszer
+    \item Docker alapú izoláció
+    \item Egyedi fordítású OpenSSL 3.3
+    \item Open Quantum Safe (OQS) projekt komponensei
+    \item Eclipse Mosquitto MQTT broker
+    \item TLS kommunikáció PQC algoritmusokkal
+\end{itemize}
+
+A rendszer logikai felépítése a következő:
+
+\begin{enumerate}
+    \item MQTT kliens
+    \item TLS kapcsolat
+    \item OpenSSL könyvtár
+    \item OQS Provider
+    \item Mosquitto broker
+\end{enumerate}
+
+A Docker alapú megközelítés biztosítja, hogy a labor könnyen újraépíthető és más rendszereken is reprodukálható legyen. Ez különösen fontos kutatási környezetben, ahol az eredmények reprodukálhatósága alapvető követelmény.
+
+\subsection{Operációs rendszer és alapcsomagok telepítése}
+
+A labor Ubuntu 24.04 alapú Linux környezetben készült. Az Ubuntu választása több szempontból is előnyös:
+
+\begin{itemize}
+    \item széles körű dokumentációval rendelkezik,
+    \item stabil fejlesztői környezetet biztosít,
+    \item jól támogatja a Docker és OpenSSL build folyamatokat,
+    \item kompatibilis az Open Quantum Safe projekt komponenseivel.
+\end{itemize}
+
+A telepítést követően első lépésként a rendszer frissítése szükséges. Ez biztosítja, hogy minden csomag naprakész legyen, valamint csökkenti a kompatibilitási problémák kockázatát.
+
+\begin{verbatim}
+sudo apt update
+sudo apt upgrade -y
+\end{verbatim}
+
+A build folyamatokhoz és a fejlesztői környezet kialakításához több csomag telepítése szükséges.
+
+\begin{verbatim}
+sudo apt install -y \
+build-essential \
+cmake \
+git \
+ninja-build \
+perl \
+python3 \
+python3-pip \
+libtool \
+autoconf \
+automake
+\end{verbatim}
+
+A \texttt{build-essential} csomag biztosítja a GCC fordítót és az alapvető fejlesztői eszközöket. A \texttt{cmake} modern build rendszert biztosít, míg a \texttt{ninja-build} gyorsabb fordítást tesz lehetővé. Az OpenSSL build folyamata Perl scriptet használ, ezért a \texttt{perl} csomag szintén szükséges.
+
+\subsection{Docker környezet kialakítása}
+
+A Docker egy konténerizációs platform, amely lehetővé teszi izolált futtatási környezetek létrehozását. A laborban a Docker használata több okból is indokolt:
+
+\begin{itemize}
+    \item elkülöníti a PQC OpenSSL buildet a hoszt rendszertől,
+    \item egyszerűsíti a függőségek kezelését,
+    \item biztosítja a reprodukálható környezetet,
+    \item lehetővé teszi a labor gyors újraépítését.
+\end{itemize}
+
+A Docker telepítése:
+
+\begin{verbatim}
+sudo apt install -y docker.io docker-compose
+\end{verbatim}
+
+A Docker szolgáltatás automatikus indítása:
+
+\begin{verbatim}
+sudo systemctl enable docker
+sudo systemctl start docker
+\end{verbatim}
+
+A felhasználó hozzáadása a Docker csoporthoz:
+
+\begin{verbatim}
+sudo usermod -aG docker $USER
+\end{verbatim}
+
+Ezután új bejelentkezés szükséges, hogy a jogosultságok érvénybe lépjenek.
+
+\subsection{Az Open Quantum Safe projekt komponensei}
+
+A labor egyik legfontosabb eleme az Open Quantum Safe projekt használata. Az OQS projekt célja a posztkvantum algoritmusok integrálása valós rendszerekbe és protokollokba.
+
+A laborban két fő komponens került felhasználásra:
+
+\begin{itemize}
+    \item liboqs
+    \item oqs-provider
+\end{itemize}
+
+A \texttt{liboqs} könyvtár implementálja a különböző PQC algoritmusokat. Ide tartoznak például az ML-KEM, HQC, BIKE és más NIST standardizáció alatt álló algoritmusok.
+
+Az \texttt{oqs-provider} az OpenSSL 3 Provider architektúráját használva tölti be ezeket az algoritmusokat az OpenSSL környezetbe. A Provider architektúra az OpenSSL 3 egyik legfontosabb újítása, amely lehetővé teszi külső kriptográfiai modulok dinamikus integrációját.
+
+\subsection{liboqs fordítása és telepítése}
+
+Első lépésként a liboqs forráskódját kell letölteni.
+
+\begin{verbatim}
+git clone --branch main https://github.com/open-quantum-safe/liboqs.git
+cd liboqs
+\end{verbatim}
+
+Ezután build könyvtár készül:
+
+\begin{verbatim}
+mkdir build
+cd build
+\end{verbatim}
+
+A projekt fordítása CMake és Ninja használatával történik.
+
+\begin{verbatim}
+cmake -GNinja ..
+ninja
+\end{verbatim}
+
+Telepítés:
+
+\begin{verbatim}
+sudo ninja install
+sudo ldconfig
+\end{verbatim}
+
+Az \texttt{ldconfig} parancs frissíti a dinamikus linker cache-t, így a rendszer felismeri az újonnan telepített library-kat.
+
+\subsection{OpenSSL 3.3 fordítása}
+
+A legtöbb Linux disztribúció saját OpenSSL verziót biztosít, azonban ezek általában nem kompatibilisek teljes mértékben az oqs-provider legfrissebb verzióival. Emiatt szükséges egy külön OpenSSL build létrehozása.
+
+A forráskód letöltése:
+
+\begin{verbatim}
+git clone https://github.com/openssl/openssl.git
+cd openssl
+git checkout openssl-3.3
+\end{verbatim}
+
+A konfiguráció során külön telepítési útvonal került megadásra.
+
+\begin{verbatim}
+./Configure \
+--prefix=/opt/openssl-pqc \
+linux-x86_64
+\end{verbatim}
+
+A \texttt{--prefix} paraméter célja, hogy az új OpenSSL verzió ne írja felül a rendszer alapértelmezett könyvtárait.
+
+Fordítás:
+
+\begin{verbatim}
+make -j$(nproc)
+\end{verbatim}
+
+Telepítés:
+
+\begin{verbatim}
+sudo make install
+\end{verbatim}
+
+\subsection{OQS Provider fordítása}
+
+Az oqs-provider biztosítja a kapcsolatot az OpenSSL és a liboqs között.
+
+\begin{verbatim}
+git clone https://github.com/open-quantum-safe/oqs-provider.git
+cd oqs-provider
+\end{verbatim}
+
+Fordítás:
+
+\begin{verbatim}
+cmake -DOPENSSL_ROOT_DIR=/opt/openssl-pqc .
+make
+\end{verbatim}
+
+Telepítés:
+
+\begin{verbatim}
+sudo make install
+\end{verbatim}
+
+\subsection{Környezeti változók konfigurálása}
+
+\begin{verbatim}
+export PATH=/opt/openssl-pqc/bin:$PATH
+export LD_LIBRARY_PATH=/opt/openssl-pqc/lib64:$LD_LIBRARY_PATH
+export OPENSSL_MODULES=/opt/openssl-pqc/lib64/ossl-modules
+\end{verbatim}
+
+A labor során gyakori probléma volt a következő hiba:
+
+\begin{verbatim}
+error while loading shared libraries: libssl.so.4
+\end{verbatim}
+
+Ez azt jelenti, hogy a dinamikus linker nem találta az új OpenSSL library fájlokat.
+
+\subsection{Az OpenSSL működésének ellenőrzése}
+
+\begin{verbatim}
+openssl version -a
+\end{verbatim}
+
+Provider modulok listázása:
+
+\begin{verbatim}
+openssl list -providers
+\end{verbatim}
+
+PQC algoritmusok listázása:
+
+\begin{verbatim}
+openssl list -kem-algorithms
+\end{verbatim}
+
+\subsection{Mosquitto MQTT broker telepítése}
+
+A labor MQTT broker komponense az Eclipse Mosquitto lett. A Mosquitto egy könnyűsúlyú, nyílt forráskódú MQTT broker, amely széles körben elterjedt IoT környezetekben.
+
+\begin{verbatim}
+sudo apt install -y mosquitto mosquitto-clients
+\end{verbatim}
+
+\subsection{TLS tanúsítványok létrehozása}
+
+CA tanúsítvány létrehozása:
+
+\begin{verbatim}
+openssl req -x509 -new -nodes \
+-keyout ca.key \
+-out ca.crt \
+-days 365
+\end{verbatim}
+
+Szerverkulcs generálása:
+
+\begin{verbatim}
+openssl genrsa -out server.key 2048
+\end{verbatim}
+
+CSR létrehozása:
+
+\begin{verbatim}
+openssl req -new \
+-key server.key \
+-out server.csr
+\end{verbatim}
+
+Tanúsítvány aláírása:
+
+\begin{verbatim}
+openssl x509 -req \
+-in server.csr \
+-CA ca.crt \
+-CAkey ca.key \
+-CAcreateserial \
+-out server.crt \
+-days 365
+\end{verbatim}
+
+\subsection{Mosquitto TLS konfiguráció}
+
+\begin{verbatim}
+listener 8883
+
+cafile /etc/mosquitto/certs/ca.crt
+certfile /etc/mosquitto/certs/server.crt
+keyfile /etc/mosquitto/certs/server.key
+
+require_certificate false
+\end{verbatim}
+
+\subsection{A broker indítása és tesztelése}
+
+\begin{verbatim}
+sudo systemctl restart mosquitto
+sudo systemctl status mosquitto
+\end{verbatim}
+
+TLS kapcsolat tesztelése:
+
+\begin{verbatim}
+openssl s_client \
+-provider default \
+-provider oqsprovider \
+-connect localhost:8883
+\end{verbatim}
+
+\subsection{MQTT kommunikáció ellenőrzése}
+
+Subscriber indítása:
+
+\begin{verbatim}
+mosquitto_sub \
+-h localhost \
+-p 8883 \
+--cafile ca.crt \
+-t test/topic
+\end{verbatim}
+
+Publisher indítása:
+
+\begin{verbatim}
+mosquitto_pub \
+-h localhost \
+-p 8883 \
+--cafile ca.crt \
+-t test/topic \
+-m "Hello PQC"
+\end{verbatim}
+
+\subsection{Összegzés}
+
+A kialakított labor sikeresen demonstrálja, hogy az MQTT alapú IoT kommunikáció integrálható posztkvantum kriptográfiai algoritmusokkal. Az OpenSSL 3 Provider architektúrája és az Open Quantum Safe projekt lehetővé teszi modern PQC algoritmusok TLS környezetben történő használatát.
+
+A labor előnye, hogy reprodukálható, izolált és könnyen bővíthető. A rendszer megfelelő alapot biztosít további kutatásokhoz, például TLS handshake mérésekhez, hálózati teljesítményvizsgálatokhoz vagy IoT környezetekben végzett kompatibilitási tesztekhez.
