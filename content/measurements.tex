@@ -1,1 +1,78 @@
-\chapter{Mérés}
+\chapter{Mérések}
+
+Jelen fejezet a kísérleti mérések végrehajtását és a nyers adatok gyűjtésének folyamatát írja le.
+A mérések célja a CRYSTALS-Kyber és a BIKE algoritmusok futási idejének, memóriaigényének
+és --- ahol alkalmazható --- energiafogyasztásának meghatározása a korábban bemutatott
+tesztkörnyezetben.
+
+%----------------------------------------------------------------------------
+\section{Mérési forgatókönyvek}
+%----------------------------------------------------------------------------
+
+\subsection{Alap kriptográfiai műveletek mérése}
+
+% TODO: Kulcsgenerálás (KeyGen), kapszulázás (Encapsulation) és visszafejtés (Decapsulation)
+% futási idejének izolált mérése — mindkét algoritmuson, különböző biztonsági szinteken
+% (Kyber-512/768/1024, BIKE-L1/L3/L5).
+
+\subsection{TLS kézfogás (handshake) mérése}
+
+% TODO: Teljes TLS 1.3 kézfogás időmérése PQC KEM-mel kombinálva (hibrid és tiszta PQC mód).
+% MQTT connect–publish–disconnect ciklus mérése.
+
+\subsection{Terheléses mérés}
+
+% TODO: Ismételt kézfogások szekvenciálisan és párhuzamosan — átviteli sebesség és
+% átlagos handshake-idő meghatározása terhelés alatt.
+
+%----------------------------------------------------------------------------
+\section{Mérési módszer és adatgyűjtés}
+%----------------------------------------------------------------------------
+
+\subsection{Időmérés megvalósítása}
+
+% TODO: Mérési könyvtár / syscall (clock_gettime, CLOCK_MONOTONIC), mérési iterációk száma,
+% statisztikai módszer (átlag, medián, szórás, kiugróértékek kizárása).
+
+\subsection{Memóriahasználat mérése}
+
+% TODO: Peak RSS / stack usage mérése (valgrind massif, /proc/\$PID/status, vagy
+% wolfSSL beépített memóriastatisztika).
+
+\subsection{Energiafogyasztás mérése}
+
+% TODO: Ha elvégezték: mérési pont, mintavételezési frekvencia, mértékegység (mJ/művelet).
+% Ha nem: alfejezet elhagyható.
+
+%----------------------------------------------------------------------------
+\section{Mérési eredmények}
+%----------------------------------------------------------------------------
+
+\subsection{Kyber-512 eredmények}
+
+% TODO: KeyGen / Encap / Decap futási idő táblázat (ms), memória (kB), iterációk száma.
+
+\subsection{Kyber-768 és Kyber-1024 eredmények}
+
+% TODO: Ugyanaz magasabb biztonsági szinteken.
+
+\subsection{BIKE-L1 eredmények}
+
+% TODO: KeyGen / Encap / Decap futási idő, memória. Megjegyzés a dekódolási hibaarányról
+% (dekódolási valószínűség, esetleges újrapróbálkozások).
+
+\subsection{BIKE-L3 és BIKE-L5 eredmények}
+
+% TODO: Ugyanaz magasabb szinteken.
+
+\subsection{TLS kézfogás összesítő adatok}
+
+% TODO: Teljes handshake idő algoritmustípusonként, összehasonlítás RSA/ECDH referenciával.
+
+%----------------------------------------------------------------------------
+\section{A mérések összefoglalása}
+%----------------------------------------------------------------------------
+
+% TODO: Rövid szöveges összegzés a nyers adatokról, kiemelve a legfontosabb tendenciákat
+% (melyik algoritmus volt gyorsabb / erőforrás-hatékonyabb), részletes elemzés nélkül
+% (az a következő fejezetbe kerül).

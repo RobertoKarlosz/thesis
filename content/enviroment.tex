@@ -1,1 +1,55 @@
-\chapter{Környezet}
+\chapter{Mérési környezet}
+
+Jelen fejezet a kísérleti mérések elvégzéséhez kialakított hardver- és szoftverkörnyezetet mutatja be.
+A fejezet célja, hogy az eredmények reprodukálhatóságához szükséges összes technikai részletet
+rögzítse: az alkalmazott eszközök specifikációját, a szoftverkomponensek verzióit és a hálózati
+topológiát.
+
+%----------------------------------------------------------------------------
+\section{Hardverkörnyezet}
+%----------------------------------------------------------------------------
+
+\subsection{Tesztplatform specifikációja}
+
+% TODO: A mérésekhez használt eszköz(ök) pontos leírása (pl. Raspberry Pi 4B, ARM Cortex-M4
+% alapú mikrovezérlő, x86 referenciagép stb.) — processzor, órajel, RAM, flash mérete.
+
+\subsection{Hálózati topológia}
+
+% TODO: A mérési elrendezés topológiájának leírása (kliens–broker–szerver kapcsolat,
+% hálózati interfész típusa, lokális vs. konténeres kommunikáció).
+
+\subsection{Energiaellátás és mérőeszközök}
+
+% TODO: Ha energiamérés is történt: milyen eszközzel (pl. INA219 áramszenzor, PowerProfiler Kit),
+% hogyan lett bekötve. Ha nem, ez az alfejezet elhagyható.
+
+%----------------------------------------------------------------------------
+\section{Szoftverkörnyezet}
+%----------------------------------------------------------------------------
+
+\subsection{Operációs rendszer és alapkönyvtárak}
+
+% TODO: OS verzió, kernel, libc, gcc/clang verzió, cmake verzió.
+
+\subsection{Kriptográfiai könyvtárak}
+
+% TODO: wolfSSL / OpenSSL-OQS verzió, liboqs verzió, oqs-provider verzió, fordítási flagek
+% (pl. -O2, konstans idejű fordítás, hardveres gyorsítás be/ki).
+
+\subsection{MQTT infrastruktúra}
+
+% TODO: Eclipse Mosquitto verzió, konfigurációs paraméterek (port, TLS verzió, cipher suite),
+% kliens könyvtár (paho, mosquitto_pub/sub stb.).
+
+\subsection{Konténerizáció és reprodukálhatóság}
+
+% TODO: Docker image verziók, Dockerfile főbb lépései, volume- és portmapping.
+
+%----------------------------------------------------------------------------
+\section{A mérési környezet összefoglalása}
+%----------------------------------------------------------------------------
+
+% TODO: Rövid összefoglaló táblázat a főbb komponensekről és verziókról.
+% Esetleg megjegyzés arról, hogy a környezet hogyan tér el a valódi IoT deploymenttől
+% (pl. teljesítménybeli különbség egy gyári Cortex-M0 és a tesztplatform között).

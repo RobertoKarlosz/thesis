@@ -1,1 +1,70 @@
-\chapter{Eredények}
+\chapter{Eredmények kiértékelése}
+
+Jelen fejezet a mért adatok részletes elemzését és értelmezését tartalmazza. A fejezet célja,
+hogy a nyers mérési eredményekből következtetéseket vonjon le a CRYSTALS-Kyber és a BIKE
+algoritmusok IoT alkalmazhatóságáról, és összehasonlítsa a két protokoll teljesítményét
+különböző szempontok szerint.
+
+%----------------------------------------------------------------------------
+\section{Teljesítmény összehasonlítása}
+%----------------------------------------------------------------------------
+
+\subsection{Futási idő összehasonlítása}
+
+% TODO: Összefoglaló táblázat és oszlopdiagramok: KeyGen / Encap / Decap futási idő
+% Kyber vs. BIKE, biztonsági szintenként. Relatív különbségek kiemelése.
+
+\subsection{Memóriaigény összehasonlítása}
+
+% TODO: RAM- és flash-lábnyom összehasonlítása; hogyan aránylik a tipikus Cortex-M
+% eszközök korlátaihoz (pl. 64 kB RAM korlát).
+
+\subsection{Kulcs- és kapszulaméret összehasonlítása}
+
+% TODO: Nyilvános kulcs, privát kulcs, kapszula (ciphertext) méretei bájtban,
+% összehasonlítás RSA-2048 / ECDH P-256 referenciaértékekkel.
+% Milyen hatással van ez a LoRaWAN / NB-IoT payload-korlátokra.
+
+\subsection{TLS kézfogás teljesítménye}
+
+% TODO: Handshake idő és üzenetméret vizsgálata; hálózati overhead becslése.
+
+%----------------------------------------------------------------------------
+\section{Biztonsági szempontú értékelés}
+%----------------------------------------------------------------------------
+
+\subsection{Biztonsági szintek és NIST kategóriák}
+
+% TODO: NIST biztonsági szint I/III/V megfeleltetés, mi ez kvantumbitek számában
+% kifejezve (AES-128/192/256 ekvivalens).
+
+\subsection{Ismert kriptanalitikai eredmények}
+
+% TODO: Rövid összefoglalás: mi az aktuális legjobb klasszikus és kvantum támadás
+% Kyber és BIKE ellen; mekkora a biztonsági tartalék.
+
+%----------------------------------------------------------------------------
+\section{Alkalmazhatósági elemzés}
+%----------------------------------------------------------------------------
+
+\subsection{Erőforrás-korlátozott eszközökre vonatkozó következtetések}
+
+% TODO: Melyik biztonsági szint és algoritmus illeszkedik a vizsgált tesztplatformhoz?
+% Milyen minimális hardver szükséges az elfogadható teljesítményhez?
+
+\subsection{Protokoll-szintű kihívások}
+
+% TODO: DTLS / MQTT payload-méret korlátok, fragmentálás kérdése, cryptographic agility
+% megvalósíthatósága a vizsgált stacken.
+
+\subsection{Kyber és BIKE összehasonlító értékelése}
+
+% TODO: Táblázatos összefoglalás: sebesség, kulcsméret, memória, biztonsági szint,
+% szabványosítási státusz, implementációs érettség. Melyik mikor preferált?
+
+%----------------------------------------------------------------------------
+\section{Az eredmények összefoglalása}
+%----------------------------------------------------------------------------
+
+% TODO: A fejezet fő megállapításainak rövid összegzése; előkészítés a javaslatok
+% fejezethez.

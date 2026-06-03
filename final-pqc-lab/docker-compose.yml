@@ -1,0 +1,248 @@
+name: pqc-iot-lab
+
+networks:
+  broker-net:
+    driver: bridge
+  node-a-net:
+    driver: bridge
+    internal: true
+  node-b-net:
+    driver: bridge
+    internal: true
+  node-c-net:
+    driver: bridge
+    internal: true
+  observability-net:
+    driver: bridge
+
+services:
+
+  mosquitto:
+    build: {context: ./mosquitto-oqs, dockerfile: Dockerfile}
+    image: pqc-mosquitto:latest
+    restart: unless-stopped
+    networks: [broker-net]
+    ports: ["8883:8883"]
+    volumes: ["./certs:/certs:ro"]
+    environment:
+      PQC_ALG: ${PQC_ALG:-mlkem768}
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_pub -h 127.0.0.1 -p 1883 -t 'health' -m ping -q 0 2>/dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      start_period: 20s
+      retries: 5
+
+  pqc-proxy-a:
+    build: {context: ./pqc-proxy, dockerfile: Dockerfile}
+    image: pqc-proxy:latest
+    restart: unless-stopped
+    networks: [broker-net, node-a-net]
+    ports: ["9101:9101"]
+    volumes: ["./certs:/certs:ro"]
+    environment:
+      PQC_ALG: ${PQC_ALG:-mlkem768}
+      MOSQUITTO_HOST: mosquitto
+      MOSQUITTO_PORT: "8883"
+      METRICS_PORT: "9101"
+    deploy:
+      resources:
+        limits:
+          cpus: "${PROXY_CPUS:-0.5}"
+    depends_on:
+      mosquitto:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9101/metrics"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+
+  pqc-proxy-b:
+    build: {context: ./pqc-proxy, dockerfile: Dockerfile}
+    image: pqc-proxy:latest
+    restart: unless-stopped
+    networks: [broker-net, node-b-net]
+    ports: ["9102:9101"]
+    volumes: ["./certs:/certs:ro"]
+    environment:
+      PQC_ALG: ${PQC_ALG:-mlkem768}
+      MOSQUITTO_HOST: mosquitto
+      MOSQUITTO_PORT: "8883"
+      METRICS_PORT: "9101"
+    deploy:
+      resources:
+        limits:
+          cpus: "${PROXY_CPUS:-0.5}"
+    depends_on:
+      mosquitto:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9101/metrics"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+
+  pqc-proxy-c:
+    build: {context: ./pqc-proxy, dockerfile: Dockerfile}
+    image: pqc-proxy:latest
+    restart: unless-stopped
+    networks: [broker-net, node-c-net]
+    ports: ["9103:9101"]
+    volumes: ["./certs:/certs:ro"]
+    environment:
+      PQC_ALG: ${PQC_ALG:-mlkem768}
+      MOSQUITTO_HOST: mosquitto
+      MOSQUITTO_PORT: "8883"
+      METRICS_PORT: "9101"
+    deploy:
+      resources:
+        limits:
+          cpus: "${PROXY_CPUS:-0.5}"
+    depends_on:
+      mosquitto:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9101/metrics"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+
+  iot-node-a:
+    build: {context: ./iot-node, dockerfile: Dockerfile}
+    image: pqc-iot-node:latest
+    restart: unless-stopped
+    networks: [node-a-net, observability-net]
+    ports: ["9110:9100"]
+    environment:
+      NODE_ID: node-a
+      MQTT_BROKER: pqc-proxy-a
+      MQTT_PORT: "1883"
+      PUBLISH_INTERVAL: ${PUBLISH_INTERVAL:-5}
+      METRICS_PORT: "9100"
+    deploy:
+      resources:
+        limits:
+          cpus: "${NODE_CPUS:-0.5}"
+    depends_on:
+      pqc-proxy-a:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9100/metrics')"]
+      interval: 15s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+
+  iot-node-b:
+    build: {context: ./iot-node, dockerfile: Dockerfile}
+    image: pqc-iot-node:latest
+    restart: unless-stopped
+    networks: [node-b-net, observability-net]
+    ports: ["9111:9100"]
+    environment:
+      NODE_ID: node-b
+      MQTT_BROKER: pqc-proxy-b
+      MQTT_PORT: "1883"
+      PUBLISH_INTERVAL: ${PUBLISH_INTERVAL:-5}
+      METRICS_PORT: "9100"
+    deploy:
+      resources:
+        limits:
+          cpus: "${NODE_CPUS:-0.5}"
+    depends_on:
+      pqc-proxy-b:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9100/metrics')"]
+      interval: 15s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+
+  iot-node-c:
+    build: {context: ./iot-node, dockerfile: Dockerfile}
+    image: pqc-iot-node:latest
+    restart: unless-stopped
+    networks: [node-c-net, observability-net]
+    ports: ["9112:9100"]
+    environment:
+      NODE_ID: node-c
+      MQTT_BROKER: pqc-proxy-c
+      MQTT_PORT: "1883"
+      PUBLISH_INTERVAL: ${PUBLISH_INTERVAL:-5}
+      METRICS_PORT: "9100"
+    deploy:
+      resources:
+        limits:
+          cpus: "${NODE_CPUS:-0.5}"
+    depends_on:
+      pqc-proxy-c:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9100/metrics')"]
+      interval: 15s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    networks: [observability-net, broker-net, node-a-net, node-b-net, node-c-net]
+    ports: ["9090:9090"]
+    volumes: ["./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-admin-api
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    networks: [observability-net]
+    ports: ["3000:3000"]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/pqc-overview.json
+    volumes: ["./grafana/provisioning:/etc/grafana/provisioning:ro"]
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    restart: unless-stopped
+    networks: [observability-net]
+    ports: ["9100:9100"]
+    command:
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    pid: host
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9100/metrics"]
+      interval: 15s
+      timeout: 5s
+      start_period: 5s
+      retries: 3

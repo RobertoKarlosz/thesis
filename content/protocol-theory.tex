@@ -1,44 +1,508 @@
-\chapter{Protokollok ismertetése}
+\chapter{Posztkvantum-kriptográfiai protokollok}
 
-\section{Kyber protocoll}
+%----------------------------------------------------------------------------
 
-A CRYSTALS KYBER protokoll a posztkvantum-kriptográfia egyik jelentős megoldása, amely a NIST
-által írt elemzések alapján biztonságosak. Ez a protokoll a rács alapú titkosításra épül, amit LWE
-alapokon valósít meg, és számos biztonsági tulajdonsággal rendelkezik, amelyek lehetővé teszik a
-megbízható és titkos kommunikációt.
+Jelen fejezetben részletesen bemutatjuk a posztkvantum-kriptográfia két legígéretesebb protokollját, 
+a CRYSTALS-Kyber és a BIKE (Bit Flipping Key Encapsulation) algoritmusokat. Ezek a protokollok 
+a modern kriptográfiai kihívásokra adnak választ, előkészítve a rendszereinket a kvantumszámítógépek 
+jövőbeli fenyegetésére. A fejezet célja, hogy megértsük a matematikai alapokat, a működési 
+mechanizmusokat és az alkalmazási lehetőségeket, különös tekintettel az integrált rendszerek 
+(IoT) biztonságára.
 
-A KYBER protokoll alapvetően három fő részből áll: a kulcskészítés és kulcscsere folyamatából, az
-üzenet titkosításából és az üzenet visszafejtéséből.
+%----------------------------------------------------------------------------
 
-\subsection{Paraméterek és kulcskészítés}
+\section{Posztkvantum-kriptográfia matematikai alapjai}
 
-A kulcskészítés folyamatának első lépése a paraméterek inicializálása. Ez magában foglalja a rács
-paramétereinek és a biztonsági szintnek a meghatározását. A KYBER protokoll különböző biztonsági
-szinteket kínál, amelyek lehetővé teszik a felhasználók számára a megfelelő szintű védelem kiválasztását.
+%----------------------------------------------------------------------------
 
-A kulcskészítés során a Alice (a fogadó fél) elkészíti a privát és publikus kulcsokat. A privát kulcs lesz az
-s vektor, a publikus pedig az A mátrix és a t vektor. Ez így az LWE séma kulcsgenerálási folyamata
+A posztkvantum-kriptográfia azokra a kriptográfiai algoritmusokra utal, amelyek ellenállnak a 
+kvantumszámítógépek támadásainak. A klasszikus kriptográfia biztonsága olyan matematikai problémák 
+nehézségén alapul, amelyek klasszikus számítógépeken véges idő alatt nem oldhatók meg. Azonban a 
+Shor-algoritmus felfedezése óta tudjuk, hogy a kvantumszámítógépek exponenciálisan felgyorsíthatják 
+a faktorizációs és diszkrét logaritmus problémák megoldását, ami az RSA és az elliptikus görbe 
+kriptográfia alapjait veszélyezteti.
 
-\subsection{Üzenet titkosítása}
-A Bob (a küldő fél) az Alice publikus kulcsát használja az üzenet titkosításához. A Bob egy véletlenszerű vektort generál, majd a publikus kulcsot használva létrehozza a titkosított üzenetet. Ez a folyamat magában foglalja a rács alapú műveleteket és a hibák hozzáadását, hogy biztosítsa a titkosítás biztonságát.
+A posztkvantum-kriptográfiai algoritmusok olyan matematikai struktúrákra épülnek, amelyeknél még nem 
+sikerült kvantum gyorsulást találni. Az egyik legfontosabb ilyen struktúra a rácselméleten alapuló 
+titkosítás, amely a modul Learning With Errors (module-LWE) problémára épül.
 
-Az üzenet titkosításakor Bob (a küldő fél) egy saját titkos kulcs segítségével és újabb hibavektorokkal
-titkosítja üzenetét, amely az u és v vektorok lesznek.
+\subsection{A rácselmélet alapjai}
 
-\subsection{Titkosítás visszafejtése}
+A rács egy olyan diszkrét algebrai struktúra, amely a lineáris algebra és a számelmélet metszéspontjában 
+helyezkedik el. Formálisan, egy $n$ dimenziós rács a vektortérnek egy olyan részhalmaza, amely 
+egy $n$ vektorból álló bázis összes egész lineáris kombinációjaként állítható elő. Legyen $\mathbf{b}_1, 
+\mathbf{b}_2, \ldots, \mathbf{b}_n$ egy rács bázisa, akkor a rács pontjaira teljesül:
 
-Visszafejtéskor Alice a titkos kulcsát felhasználva megkapja az üzenetet és egy hibavektort, amit a bázis
-ismeretében a megfelelő értékre le tudja kerekíteni.
+$$\Lambda = \left\{ \sum_{i=1}^{n} c_i \mathbf{b}_i \mid c_i \in \mathbb{Z} \right\}$$
 
-Az algoritmus hatékonysága és teljesítménye azt jelenti, hogy a KYBER protokoll képes-e a valós
-környezetben megfelelő sebességgel és erőforrásokkal működni. Ez kritikus fontosságú a gyakorlati
-alkalmazások szempontjából, mivel az információvédelem mellett a protokoll gyors és hatékony
-működését is biztosítania kell.
+A rácsok alapvető jellemzője, hogy számos nehéz matematikai probléma társul hozzájuk. Az egyik leghíresebb 
+a legrövidebb vektor probléma (Shortest Vector Problem, SVP), amely azt kérdezi: adott egy rács, 
+mekkora a nullvektortól különböző legrövidebb vektor? A másik központi probléma a legközelebbi vektor 
+probléma (Closest Vector Problem, CVP), amely egy adott vektor rácshoz legközelebbi rácspontjának 
+megkeresésére vonatkozik. Mindkét probléma NP-nehéznek bizonyult, és jelenleg nem ismeretes polinomiális 
+idejű megoldása még kvantumszámítógépeken sem.
 
+Az LWE probléma ezt az ötletet természetes módon a kriptográfiára adaptálja. Egy támadó abban az esetben 
+sikeres, ha egy lineáris rendszer megoldását tudja helyreállítani úgy, hogy az egyenletek mellett hibás 
+mérések is rendelkezésre állnak. Ez a probléma általánosítható moduláris polinomokra, amit 
+module-LWE-nek hívunk, és ez képezi az alapját a Kyber protokollnak.
 
-\section{Kriptográfiai protokollok}
-Először a Kyber protokollt mutatjuk be, amely egy posztkvantum kriptográfiai megoldás, és a dolgozatban az IoT rendszerek biztonságának megerősítésére alkalmazzuk. Részletesen ismertetjük a Kyber működését, beleértve a kulcscserét és az üzenet titkosítását, valamint a protokoll biztonsági tulajdonságait. Ezután bemutatjuk a BIKE protokollt, amely szintén egy posztkvantum kriptográfiai megoldás, és a dolgozatban a Kyber protokoll alternatívájaként szerepel. Ismertetjük a BIKE működését, beleértve a kulcscserét és az üzenet titkosítását, valamint a protokoll biztonsági tulajdonságait. Végül összehasonlítjuk a Kyber és a BIKE protokollokat, kiemelve előnyeiket és hátrányaikat az IoT rendszerek biztonságának megerősítése szempontjából.
+\subsection{Az LWE probléma és annak moduláris változata}
+
+Az LWE (Learning With Errors) problémát Regev 2005-ben vezette be. Az alapfeladat a következőképpen 
+fogalmazható meg: Tegyük fel, hogy van egy titok vektor $\mathbf{s} \in \mathbb{Z}_q^n$, és meg szeretnénk 
+szerezni információt róla. Erre példa az $\langle \mathbf{a}, \mathbf{s} \rangle + e \pmod{q}$ egyenletek 
+egy sorozata, ahol $\mathbf{a}$ egy véletlen vektor $\mathbb{Z}_q^n$-ből, és $e$ egy kis hiba 
+$\mathbb{Z}_q$-ből egy $\chi$ eloszlásból (tipikusan egy Gauss-eloszlás a tangens függvény kombinációjában).
+
+Az LWE probléma azt kérdezi: polinomiális időben eldönthető-e, hogy egy $(A, \mathbf{b})$ pár, ahol 
+$\mathbf{b} = A\mathbf{s} + \mathbf{e}$, vagy pedig a $\mathbf{b}$ csak egy véletlen vektor? Ez a 
+döntési verzió, de létezik keresési verziója is, ahol az $\mathbf{s}$ vektort kell helyreállítani.
+
+A Kyber protokoll a module-LWE problémát használja, amely az LWE-nek egy hatékonyabb változata. 
+Ebben az esetben a vektorok helyett polinomokkal dolgozunk egy gyűrűben. A gyűrű általában 
+$R_q = \mathbb{Z}_q[X]/(X^n+1)$, ahol $n$ kettő hatványa és $q$ egy nagyobb prímszám. 
+Az $X^n+1$ polinomot választjuk, mert a NTT (Number Theoretic Transform) algoritmussal 
+hatékonyan lehet vele számolni.
+
+A module-LWE probléma a következőképpen írható fel: Adott az $\mathbf{A} \in R_q^{k \times \ell}$ 
+egy véletlen mátrix polinomokkal, az $\mathbf{s} \in R_q^{\ell}$ egy titok vektor, és az 
+$\mathbf{e} \in R_q^{k}$ egy kis hibavektor, meg kell-e különböztetni az $(\mathbf{A}, \mathbf{b})$ 
+párot, ahol $\mathbf{b} = \mathbf{A}\mathbf{s} + \mathbf{e}$, egy $(A, \mathbf{b}')$ párotól, 
+ahol $\mathbf{b}'$ véletlen? Az LWE és module-LWE problémákat széles körben tanulmányozták, 
+és jelenleg semmilyen klasszikus vagy kvantum algoritmus nem ismert, amely polinomiális időben 
+megoldaná őket.
+
+%----------------------------------------------------------------------------
 
 \section{CRYSTALS-Kyber protokoll}
 
-\section{BIKE protokoll}
+%----------------------------------------------------------------------------
+
+A CRYSTALS-Kyber (Crystal Lattice Signatures for Encryption and Signatures - Kyber) a posztkvantum-kriptográfia 
+egyik legígéretesebb megoldása. A protokoll 2022-ben standardizálva lett a NIST által, és széles körben 
+használható a gyakorlati alkalmazásokban. A Kyber egy kulcsbecsapódás mechanizmus (Key Encapsulation Mechanism, KEM), 
+amely lehetővé teszi, hogy két fél közösen megosztott titkot hozzon létre, amely később szimmetrikus titkosításhoz 
+használható.
+
+\subsection{Paraméterek és biztonsági szintek}
+
+A Kyber protokoll különböző biztonsági szinteket kínál, amely az alkalmazás igényeihez igazítható. 
+Az alap paraméterek:
+
+\begin{itemize}
+    \item \textbf{Kyber512}: 128 bites klasszikus biztonsági szint, amely az AES-128 szintű biztonságnak felel meg
+    \item \textbf{Kyber768}: 192 bites klasszikus biztonsági szint, amely az AES-192 szintű biztonságnak felel meg
+    \item \textbf{Kyber1024}: 256 bites klasszikus biztonsági szint, amely az AES-256 szintű biztonságnak felel meg
+\end{itemize}
+
+Az egyes szintekhez különböző paraméterek tartoznak. A Kyber512 a következő paramétereket használja:
+$n = 256$, $q = 3329$, $k = 2$ (ahol $k$ az $\mathbf{A}$ mátrix dimenziója), $\eta_1 = 3$, $\eta_2 = 2$. 
+A Kyber768 paraméterek: $n = 256$, $q = 3329$, $k = 3$, $\eta_1 = 2$, $\eta_2 = 2$. 
+A Kyber1024 paraméterek: $n = 256$, $q = 3329$, $k = 4$, $\eta_1 = 2$, $\eta_2 = 2$.
+
+Az $\eta_1$ és $\eta_2$ paraméterek határozzák meg a hibavektorok egy középre igazított binomiális 
+eloszlásának szórásának szintjét. Ezek az értékek kritikusak a biztonsági szint garantálásához, 
+mert az túl kicsi hibák a protokollt törhetővé teszik, míg a túl nagy hibák viszont 
+a decapsulation megbízhatóságát csökkentik.
+
+\subsection{Kulcscsere és kulcsencapsulation}
+
+A Kyber protokoll három fő szubrutinból áll: \texttt{KeyGen}, \texttt{Encaps}, és \texttt{Decaps}.
+
+\subsubsection{Kulcsgenerálás (KeyGen)}
+
+A kulcsgenerálás során az egyik fél (Alice) elkészíti a nyilvános és privát kulcsot. Az algoritmus 
+a következő lépésekből áll:
+
+\begin{enumerate}
+    \item Sorsoljunk le egy véletlenszerű értéket $d \in \{0,1\}^{32}$ (ezt a seed-et)
+    \item A $d$ seed-ből váltsan ki az $\rho$ értéket a $\text{SHA3-512}$ hash függvénnyel
+    \item Az $\rho$ értékből generáljunk egy véletlen mátrixot $\mathbf{A} \in R_q^{k \times k}$ 
+        az XOF (extendable output function) beépített generátorral
+    \item Generáljunk egy véletlenszerű secretet $\mathbf{s}, \mathbf{e} \in R_q^k$ binomiális eloszlásból 
+        az $\eta_1$ paraméterrel
+    \item Számítsuk ki a $\mathbf{t} = \mathbf{A} \cdot \mathbf{s} + \mathbf{e} \in R_q^k$ értéket
+    \item A nyilvános kulcs: $pk = (\mathbf{t}, \rho)$
+    \item A privát kulcs: $sk = (\mathbf{s}, \mathbf{e})$, valamint további technikai adatok
+\end{enumerate}
+
+Az algoritmus során a $\mathbf{A}$ mátrix számítása a kiterjesztett kimeneti függvény segítségével történik, 
+amely biztosítja, hogy az mátrix pszeudó-véletlen marad, de reprodukálható.
+
+\subsubsection{Üzenet encapsulation (Encaps)}
+
+A Kyber encapsulation során egy kulcscsatorna készül. Bob, aki Alice nyilvános kulcsát ismeri, 
+a következő lépéseket hajtja végre:
+
+\begin{enumerate}
+    \item Sorsoljunk le egy véletlenszerű üzenet $m \in \{0,1\}^{32}$-t
+    \item A $m$ üzenetből váltson ki $G$ hash függvénnyel egy $(r, d') \in \{0,1\}^{32} \times \{0,1\}^{32}$ párt
+    \item Generáljunk egy véletlenszerű vektort $\mathbf{y} \in R_q^k$ binomiális eloszlásból az $\eta_1$ paraméterrel
+    \item Számítsuk ki a $\mathbf{u} = \mathbf{A}^T \cdot \mathbf{y} + \mathbf{e}' \in R_q^k$ értéket, 
+        ahol $\mathbf{e}' \in R_q^k$ binomiális eloszlásból az $\eta_2$ paraméterrel
+    \item Számítsuk ki a $\mu = \lfloor \frac{q}{2} \rfloor \cdot m_i$ értéket minden $i$-re, és 
+        a $v = \mathbf{t}^T \cdot \mathbf{y} + e'' + \mu$ értéket, ahol $e''$ egy skalár hibavektor
+    \item A kapszula (ciphertext): $c = (\mathbf{u}, v)$
+    \item A megosztott titok (shared secret): $K = H(m)$, ahol $H$ a \texttt{SHA3-256} függvény
+\end{enumerate}
+
+Az encapsulation folyamata garantálja, hogy az üzenet $m$ titkos marad, mivel csak Alice, 
+aki ismeri az $\mathbf{s}$ vektort, tudja helyreállítani az eredeti üzenetet.
+
+\subsubsection{Üzenet decapsulation (Decaps)}
+
+Az Alice által végrehajtott decapsulation az encapsulation inverze. A nyilvános kapszula 
+és a privát kulcs alapján:
+
+\begin{enumerate}
+    \item Számítsuk ki a $\mathbf{u}'$ és $v'$ értékeket az $\mathbf{s}$ vektort használva: 
+        $\mathbf{u}' = \mathbf{s}^T \cdot \mathbf{u} \in R_q^k$ (mod $q$)
+    \item Számítsuk ki a hibahatáron belüli üzenet biteket: 
+        $m'_i = 1$ ha $|v - \mathbf{u}' - \lfloor \frac{q}{2} \rfloor|_q > \lfloor \frac{q}{4} \rfloor$, 
+        egyébként $m'_i = 0$
+    \item Az helyreállított üzenet: $m' = \text{recover}(\mathbf{u}', v)$
+    \item A megosztott titok: $K = H(m')$
+\end{enumerate}
+
+Az LWE probléma nehézsége biztosítja, hogy az $\mathbf{s}$ vektor nélkül nem lehet helyreállítani 
+az üzenetet, még akkor sem, ha az encapsulation alatt zajló számítások részleges információi 
+rendelkezésre állnak.
+
+\subsection{Biztonsági tulajdonságok és hardver gyorsulás}
+
+A Kyber biztonsága az module-LWE probléma feltételezett nehézségén alapul. A NIST szabványosítási 
+folyamatban az összes benyújtott posztkvantum algoritmussal szembeni támadások részletes elemzésére 
+irányuló kutatások azt mutatják, hogy a Kyber protokoll az elvárt biztonsági szinteket nyújtja, 
+ha a paraméterek helyesen kerülnek megválasztásra. A Kyber különösen sérülékeny az oldalsávos 
+támadásokra (side-channel attacks), így az implementációnak óvatosnak kell lennie az időzítési 
+információk elkerüléséhez.
+
+A Kyber nagy előnye az NTT algoritmusnak köszönhető, amely a gyűrűn végzett szorzásokat 
+lineáris időre csökkenti. Az NTT a Fast Fourier Transform (FFT) módosított verziója, amely 
+egész számok fölött működik a $q$ prímszám feldolgozásával. A modern processzorok (mint az Intel vagy ARM) 
+támogatják a vektoros utasításokat (SIMD - Single Instruction Multiple Data), amelyekkel a Kyber 
+hatékonyan felgyorsítható. Az optimalizált implementációk másodpercenként több száz kulcscserét 
+tudnak végezni standard laptop processzorokon.
+
+%----------------------------------------------------------------------------
+
+\section{BIKE (Bit Flipping Key Encapsulation) protokoll}
+
+%----------------------------------------------------------------------------
+
+A BIKE egy alternatív posztkvantum-kriptográfiai protokoll, amely az error-correcting codes elméletén 
+alapul. Szemben a Kyber rács-alapú megközelítésével, a BIKE kód-alapú kriptográfiát alkalmaz, 
+amely a McEliece rendszer eszméire épül. A kód-alapú titkosítás hosszú történelmi gyökerekkel rendelkezik, 
+és erős ellenálló képességgel bír a kvantum-támadásokkal szemben.
+
+\subsection{Kód-alapú titkosítás alapelvei}
+
+A kód-alapú kriptográfia fundamentális ötlete, hogy az error-correcting kódok dekódolása általános 
+esetben NP-nehéz probléma. Az egyik legfontosabb result, hogy szinte minden véletlen kód dekódolása 
+NP-teljes. Ez azt jelenti, hogy nem ismeretes polinomiális idejű algoritmus az általános eset 
+dekódolására, még kvantum-támadások alatt sem.
+
+A McEliece sistem, amely 1978-ban lett bevezetett, ezt az ötletet használta. A titkos kulcs 
+az egy könnyen dekódolható kód (például Goppa-kód), a nyilvános kulcs pedig a kód generátor 
+mátrixának egy permutált és zavart verziója. Ennek a rendszernek az a nagy előnye, hogy 
+az encapsulation rendkívül gyors (csak mátrix-vektor szorzás és hibahozzáadás), azonban 
+a kulcsméretek nagyok (több tízezer bit).
+
+A BIKE ezt a koncepciót modernizálja az MDPC (Moderate-Density Parity-Check) kódok 
+felhasználásával, amelyek kompaktabb kulcsokat lehetővé tesznek az error-correcting kód-alapú 
+titkosítás megtartása mellett.
+
+\subsection{MDPC kódok és az BIKE paraméterek}
+
+Az MDPC kódok olyan lineáris kódok, amelyekben a paritás-mátrix ritka (sparse), vagyis 
+csupán néhány nem-nulla elemmel rendelkezik minden sorban. Formálisan, egy $n$ hosszú 
+MDPC kód az $H$ paritás-mátrixszal definiálható, ahol az $H$ egy $m \times n$ mátrix, 
+és az egyes soroknak csupán $d_c$ nem-nulla elemei vannak (constant weight).
+
+Adott egy hibavektor $\mathbf{e} \in \mathbb{F}_2^n$ (ahol az elemek 0 vagy 1), 
+az $\mathbf{e}$ a kódhoz tartozik, ha $H \cdot \mathbf{e}^T = \mathbf{0}^T$ (mod 2). 
+Ha az $\mathbf{e}$-nak néhány nem-nulla bitje van (például $t$ darab), akkor 
+az $H \cdot \mathbf{e}^T$ nem lesz zérus, hanem az úgynevezett szindróma (syndrome).
+
+Az MDPC dekódolási probléma azt kérdezi: adott egy szindróma $\mathbf{s} = H \cdot \mathbf{e}^T$, 
+és az $H$ paritás-mátrix, helyreállítható-e az eredeti hibavektor $\mathbf{e}$ a rendszeres dekódolási 
+algoritmusokkal? Ha a hibaváltség és a kód paraméterei helyesen kerülnek választásra, a dekódolás 
+szinte garantált, de egy támadónak (aki az $H$ teljes szerkezetét nem ismeri) gyakorlatilag lehetetlen.
+
+A BIKE protokoll különböző szinteket kínál:
+
+\begin{itemize}
+    \item \textbf{BIKE-L1}: 128 bites klasszikus biztonsági szint, $n = 12323$, $d = 71$, $t = 134$
+    \item \textbf{BIKE-L3}: 192 bites klasszikus biztonsági szint, $n = 24659$, $d = 71$, $t = 199$
+    \item \textbf{BIKE-L5}: 256 bites klasszikus biztonsági szint, $n = 40973$, $d = 71$, $t = 264$
+\end{itemize}
+
+Itt az $n$ a kód hossza, az $d$ az MDPC kód soros súlya (row weight), és az $t$ az 
+a maximális hiba-számlálás, amit a dekódoló még helyesen kezel. Az $n$ és $t$ értékek 
+közvetlenül kapcsolódnak a biztonsági szinthez.
+
+\subsection{BIKE kulcsgenerálás és encapsulation}
+
+A BIKE protokoll szintén három fő algoritmusból áll: \texttt{KeyGen}, \texttt{Encaps}, és \texttt{Decaps}.
+
+\subsubsection{Kulcsgenerálás (KeyGen)}
+
+A BIKE kulcsgenerálása az MDPC kódok szerkezetéből indul:
+
+\begin{enumerate}
+    \item Generáljunk egy véletlenszerű ritka mátrixot $H = [H_0, H_1]$, ahol az 
+        $H_0$ és $H_1$ az $m \times n$ alakú, és az egyes soroknak pontosan $d$ nem-nulla 
+        elemük van (constant weight)
+    \item Az $H_0$ sorainak az inverze (ha létezik) az $L$ mátrix
+    \item Az $H$-ből számítsuk ki az effektív paritás-mátrixot: 
+        $H' = L \cdot H = [I, H']$ (identity és egy $H'$ mátrix)
+    \item A nyilvános kulcs: $pk = H'$ (vagy annak egy tömörített reprezentációja)
+    \item A privát kulcs: $sk = H$ (az eredeti paritás-mátrix és az $L$ inverz mátrix információi)
+\end{enumerate}
+
+\subsubsection{Üzenet encapsulation (Encaps)}
+
+A Kyber-hez hasonlóan, az encapsulation egy megosztott titkot hoz létre:
+
+\begin{enumerate}
+    \item Sorsoljunk le egy véletlenszerű üzenet $m \in \{0,1\}^{n}$ bits, 
+        de csak az első $t$ bit legyen nem-nulla
+    \item A szindrómát számítsuk ki: $\mathbf{s} = H' \cdot \mathbf{m}^T$ (mod 2)
+    \item A kapszula: $c = \mathbf{s}$ (vagy egy tömörített verzió)
+    \item A megosztott titok: $K = H(\mathbf{m})$
+\end{enumerate}
+
+\subsubsection{Üzenet decapsulation (Decaps) és bit-flipping dekódolás}
+
+A decapsulation során az Alice ismeri az eredeti $H$ mátrixot, így helyreállíthatja az üzenetet:
+
+\begin{enumerate}
+    \item A szindrómából indulva ($\mathbf{s}$), a dekódoló algoritmus 
+        helyreállítja az eredeti hibavektort $\mathbf{e}'$
+    \item A helyreállított üzenet: $m' = \mathbf{e}'$
+    \item A megosztott titok: $K = H(m')$
+\end{enumerate}
+
+A bit-flipping algoritmus az egyik legegyszerűbb és leggyakrabban használt MDPC dekódolási módszer. 
+Az algoritmus iteratívan működik:
+
+\begin{enumerate}
+    \item Inicializálás: az aktuális hibavektor $\mathbf{e}_0 = \mathbf{0}$
+    \item Iteráció $i = 1, 2, \ldots, \text{max\_iter}$:
+        \begin{enumerate}
+            \item Számítsuk ki az aktuális szindrómát: 
+                $\mathbf{s}_i = \mathbf{s} + H \cdot \mathbf{e}_i^T$ (mod 2)
+            \item Az $j$ pozícióban lévő hiba-score: 
+                $\text{score}_j = $ az $j$-ik bit által befolyásolt szindróma bitek száma
+            \item A legmagasabb score-ú pozícióban fordítsuk az $\mathbf{e}_{i+1}$ bitet: 
+                $e_{i+1,j} = e_{i,j} \oplus 1$ ha score$_j \geq \text{threshold}$
+            \item Ha az $\mathbf{s}_i = \mathbf{0}$, akkor sikeresen dekódoltunk
+        \end{enumerate}
+    \item Ha az iterációs limit elérésre kerül, és még nem szingátunk, 
+        az algoritmus meghiúsul vagy egy feltételes választási módszert alkalmaz
+\end{enumerate}
+
+A bit-flipping algoritmus hatékonysága az $\mathbf{m}$ hibavektor súlyától és a küszöb (threshold) 
+választásától függ. A megfelelő paraméterek mellett az algoritmus szinte garantáltan helyreállítja 
+az $t$ nagyságrendű hibavektort. Az algoritmus nagy előnye az O($n^2 t$) időbonyolultsága az $H$ 
+mátrix elég ritka volta miatt, amely lehetővé teszi az ilyen nagyméretű kódok praktikus alkalmazását.
+
+\subsection{Biztonsági tulajdonságok}
+
+A BIKE biztonsága az MDPC dekódolási probléma és az általános szindróma dekódolás NP-nehézségén alapul. 
+Az ismeretes támadások közül az egyik legeredményesebb az úgynevezett \emph{decoding failure attack}, 
+amely azt próbálja kihasználni, hogy az MDPC dekódoló néha meghiúsulhat. Az újabban bevezetett 
+kutatások azt mutatják, hogy a BIKE paraméterek a szükséges biztonsági szinteket nyújtják, 
+ha az encapsulation transzformáció helyesen (például az Fujisaki-Okamoto transzformációval) 
+kerül meghívásra az IND-CCA biztonság garantálásához.
+
+A BIKE egy másik előnye az implementációs egyszerűsége. Az encapsulation és az initial decoding 
+csupán bitwise XOR és összeadást igényel, ami könnyen felgyorsítható szoftveres és hardveres 
+eszközökkel. A Kyber-hez képest a BIKE nagyobb kulcsméreteket igényel, azonban az encapsulation 
+részben gyorsabb lehet egyszerűbb eszközökön.
+
+%----------------------------------------------------------------------------
+
+\section{Oldalsávos támadások és biztonsági implementáció}
+
+%----------------------------------------------------------------------------
+
+A posztkvantum-kriptográfiai algoritmusok biztonságát nemcsak az elméleti matematikai 
+alapjai, hanem a gyakorlati implementáció is meghatározza. Az oldalsávos támadások 
+(side-channel attacks) olyan támadási módszerek, amelyek a fizikai implementáció 
+melléktermékeit, mint az időzítési információ, energiafogyasztás vagy elektromágneses 
+sugárzás kihasználják.
+
+\subsection{Időzítési támadások (Timing Attacks)}
+
+Az időzítési támadások azt használják ki, hogy az algoritmus futási ideje függhet 
+a feldolgozott adatoktól. Például, ha az LWE dekódoló algoritmus gyorsabban fejeződik be 
+bizonyos hibaértékek mellett, akkor egy támadó a futási időmérésből információkat szerezhet 
+az eredeti titkos kulcsról.
+
+A Kyber implementáció során különös figyelmet kell fordítani arra, hogy az összes operáció 
+azonos időben fusson le, függetlenül az input értékeitől. Ez az úgynevezett konstant-time 
+implementáció. Az NTT algoritmus például nem konstant-time természet szerint, ezért 
+az implementáció során dummy operációkat kell beszúrni az időzítés kiegyenlítéshez.
+
+A BIKE esetén a bit-flipping dekódoló algoritmus szintén sérülékeny az időzítési 
+támadásokra, mivel az iteráció száma az aktuális hibaminta sikerességétől függ. 
+Az ajánlott megoldás a dekódolási iterációk számának rögzítése, még akkor is, 
+ha az algoritmus korábban sikeresen helyreállított egy érvényes hibavektort.
+
+\subsection{Energiafogyasztási támadások (Power Analysis)}
+
+Az energiafogyasztási támadások az eszköz elektromos energiafogyasztásának 
+megfigyelésén alapulnak. A különféle operációknak (összeadás, szorzás, 
+memória-hozzáférés) különböző energiafogyasztása van, és ezek a különbségek 
+felhasználhatók az algoritmus belső stállapotával kapcsolatos információkra.
+
+A CPA (Correlation Power Analysis) a legerősebb ismert energiafogyasztási támadás, 
+amely statisztikai módszereket használ a megfigyelett energiajelek és az ismert 
+algoritmus-kimenet közötti korrelációk feltérképezésére. A Kyber és BIKE 
+implementációknak maszkozási technikákat kell alkalmazniuk, ahol az összes 
+kritikus adat logikai maszkokkal kombinálódik, hogy az energiajelek ne 
+legyenek korrelálva az feldolgozandó érzékeny információkkal.
+
+\subsection{Hibabeviteli támadások (Fault Injection)}
+
+A hibabeviteli támadások során az támadó szándékosan hibákat vezet be az 
+eszköz működésébe, például elektromágneses impulzus vagy lézer segítségével, 
+és megfigyelik, hogy az algoritmus hogyan reagál. A hibázó számítások 
+eredménye információt árulhat el az algoritmus titkos paramétereiről.
+
+Az Kyber és BIKE protokolloknak ellenállónak kell lenniük az ilyen 
+támadásokkal szemben. Az egyik megközelítés a redundanciás számítások: 
+az algoritmus több alkalommal fut, és az eredmények egyezéseit 
+ellenőrzik. Ha egy hiba detektálódik, az algoritmus meghiúsul vagy 
+kijelent egy hibát, helyett hogy helytelen eredményt adna.
+
+%----------------------------------------------------------------------------
+
+\section{IoT alkalmazások és integráció}
+
+%----------------------------------------------------------------------------
+
+Az Internet of Things (IoT) rendszerek gigantikus mértékben terjednek, 
+és a biztonsági megközelítés kritikus fontosságú. Az IoT eszközök között 
+vannak erőforrás-korlátozott mikrokontrollerek (például ARM Cortex-M4), 
+melyeknek korlátozott memória (néhány kilóbájt RAM), korlátozott feldolgozási 
+teljesítmény és alacsony energiabáziú működés jellemző.
+
+\subsection{Kyber IoT implementáció}
+
+A Kyber protokoll viszonylag kis kulcsméretei és jó párhuzamosíthatósága 
+miatt alkalmas az IoT alkalmazásokra. Az ARM Cortex-M4 processzor 
+támogatja a SIMD szerű utasításokat, amelyekkel a Kyber szorzásokat 
+jellegzetes módon felgyorsítható. Az OpenQuantumSafe és a liboqs-python 
+nyílt forráskódú implementációi már biztosítanak optimalizált kódokat 
+az ARM platformokra.
+
+A Kyber512 paraméterek egy alap IoT eszközre teljesíthetők körülbelül 
+10-20 milliszekundumos encapsulation és decapsulation idővel, ami 
+az legtöbb alkalmazás számára elegendő. Az energiafogyasztás egy 
+"embedded" kontextusban körülbelül 10-50 millijoule egy teljes 
+kulcscsere művelet során, ami elfogadható az legtöbb IoT alkalmazásban.
+
+\subsection{BIKE IoT implementáció}
+
+A BIKE protokoll nagyobb kulcsméreti és iteratív dekódolási folyamata 
+miatti kihívásokat jelentenek az erőforrás-korlátozott IoT eszközökön. 
+Azonban az encapsulation művelet (amely a küldő oldalon történik) 
+viszonylag gyors és energiahatékony, mivel csupán bit-szintű operációkra 
+támaszkodik. Az erőforrás-korlátozott szándékolt decapsulation 
+(a fogadó oldalon) azonban több időt és energiát igényelhet.
+
+Egy Cortex-M4-en a BIKE-L1 paraméterekkel végzett decapsulation 
+tipikusan 100-200 milliszekundum időt vesz igénybe, ami bizonyos 
+alkalmazásokra még elfogadható, de az encapsulation-hoz képest lassabb.
+
+\subsection{Hibrid megközelítés az IoT-ben}
+
+Az ajánlott gyakorlat az IoT rendszerekben egy hibrid kulcscseremechanizmus, 
+amely kombinálja az elliptikus görbe Diffie-Hellman (ECDH) kulcscserét 
+egy posztkvantum-kriptográfiai protokollal (ML-KEM/Kyber vagy ML-KEM-BIKE). 
+Ez azt jelenti, hogy az IoT eszköz két független kulcscsatornát létesít:
+
+\begin{enumerate}
+    \item \textbf{Klasszikus csatorna}: ECDH kulcscsere, amely ma biztonságos 
+        klasszikus támadások ellen
+    \item \textbf{Posztkvantum csatorna}: ML-KEM (Kyber) kulcsencapsulation, 
+        amely biztonságos a jövőbeli kvantum-támadások ellen
+\end{enumerate}
+
+A végső szimmetrikus kulcs a két csatorna kimenetének kombinációja:
+
+$$K_{\text{final}} = H(K_{\text{ECDH}} \| K_{\text{ML-KEM}})$$
+
+Ez a megközelítés biztosítja, hogy még akkor is, ha az egyik protokoll 
+valahogy kompromittálódna, a rendszer biztonsága az másik algoritmus 
+ereje által védett marad. Ezenkívül biztosítja, hogy az a mai klasszikus 
+támadásokkal szemben megmarad az ECDH biztonság, valamint a jövőbeli 
+kvantum-veszélyek előtt a Kyber védelmez.
+
+\subsection{Memória- és tárolási követelmények}
+
+Az IoT eszközök korlátozottak a tárcsapásméreteiben és memóriájukban. 
+A Kyber512 nyilvános kulcsának mérete körülbelül 800 bájt, 
+a privát kulcsé pedig 1632 bájt. Ez az legtöbb IoT eszközre 
+közvetlenül Flash memóriában tárolható.
+
+A BIKE-L1 paraméterek nagyobb kulcsokat igényelnek: körülbelül 
+1541 bájt nyilvános kulcs és 3104 bájt privát kulcs. 
+Az erőforrás-korlátozott eszközökön ez szűkös lehet, és tömörítési 
+technikákat (például az MDPC mátrix kompakt reprezentációja) lehet 
+alkalmazni a méret csökkentésére.
+
+Az encapsulation során létrehozott kapszula mérete szintén fontos 
+az IoT kommunikációban. A Kyber512 kapszulájának mérete körülbelül 
+768 bájt, míg a BIKE-L1 kapszulájának mérete körülbelül 1541 bájt. 
+Mivel az IoT hálózatokban az adatok átvitele költséges (energiafogyasztás 
+és sávszélesség szempontjából), a kisebb kapszula-méretek előnyösebbek.
+
+%----------------------------------------------------------------------------
+
+\section{Kyber és BIKE összehasonlítása}
+
+%----------------------------------------------------------------------------
+
+A két protokoll közötti választás több tényezőtől függ: a biztonsági követelményektől, 
+az alkalmazás teljesítmény-kritikussága, és az elérhető hardver-támogatástól.
+
+\subsection{Biztonsági megfontolások}
+
+Mind a Kyber, mint a BIKE széles körben tanulmányozottak és alapvető matematikai 
+problémák NP-nehézségén alapulnak. Az LWE probléma és az MDPC dekódolás egyaránt 
+nem ismert kvantum-gyorsulást. A NIST standardizálási folyamatban mindkettő végig 
+jól teljesített, de végül a Kyber lett az ajánlott KEM standard az ML-KEM 
+megnevezéssel.
+
+\subsection{Teljesítmény- és méret-jellemzők}
+
+A Kyber általában kisebb kulcsokat igényel az BIKE-hez képest. Például Kyber768 
+esetén a nyilvános kulcs mérete körülbelül 1184 bájt, míg BIKE-L3 esetén 1541 bájt. 
+Az encapsulation sebesség hasonló, azonban a decapsulation során a Kyber 
+nagy szorzások végzésénél a BIKE inkább bit-szintű operációkra támaszkodik.
+
+\subsection{Gyakorlati alkalmazások}
+
+Az IoT rendszerekben a Kyber előnyösebb az kisebb kulcsméretei és jó 
+párhuzamosíthatósági lehetőségei miatt. Az olyan erőforrás-korlátozott 
+eszközökön, mint az ARM Cortex-M mikrokontrollerek, a Kyber szoftver-szintű 
+optimalizálása már megtörtént, és elérhető nyílt forráskódú implementáció.
+
+A BIKE-nek nagyobb memóriafoglalata van, azonban az olyan speciális alkalmazásokban, 
+ahol az encapsulation sebesség kritikus (például egy nagyon magas kódolási rátájú 
+csatorna), szintén értékes lehet.
+
+\subsection{Hibrid megközelítés}
+
+A gyakorlatban az ajánlott megközelítés egy hibrid rendszer, amely klasszikus 
+és posztkvantum kriptográfiai algoritmusokat kombinál. Például egy ECDH (Elliptic Curve 
+Diffie-Hellman) kulcscsere mellett egy ML-KEM (Kyber) kulcscsatornát végeznek, 
+és a végső szimmetrikus kulcs mindkettő kombinációja. Ez biztosítja, hogy még 
+ha az egyik algoritmus kompromittálódna is (akár egy nem várt felfedezés, 
+akár egy kvantum támadás miatt), a rendszer biztonsága megmarad az másik algoritmus 
+ereje által.
+

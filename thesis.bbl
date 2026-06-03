@@ -26,7 +26,7 @@
   \bibEarlyBegin
 \else \let\bibEarlyEnd\relax \fi
 
-\begin{thebibliography}{}
+\begin{thebibliography}{10}
 \frenchspacing
 \makeatletter
 \global\def\bibIE@lowc{%
@@ -92,5 +92,87 @@
 \def\bibTechRep#1{Jelent\'{e}s}
 \def\bibInSelf#1{In u\H{o}: }
 \csname bibOverride\endcsname
+
+\bibitem{google_supremacy_2019}
+Frank Arute\bibEtAl .:
+\bibNewBlock Quantum supremacy using a programmable superconducting processor.
+\bibNewBlock {\em Nature}, 574. \'evf. (2019), 505--510.~p.
+
+\bibitem{ashton1999}
+Kevin Ashton:
+\bibNewBlock That `internet of things' thing.
+\bibNewBlock RFID Journal, 2009.
+\bibNewBlock Originally coined 1999.
+
+\bibitem{BIKE-SPEC}
+Bike: Bit flipping key encapsulation.
+\bibNewBlock \url{https://bikesuite.org/}.
+\bibNewBlock Project page and submission materials, accessed 2026-05-26.
+
+\bibitem{CRYSTALS-KYBER}
+Crystals-kyber: Specification and supporting documentation.
+\bibNewBlock \url{https://pq-crystals.org/kyber/}.
+\bibNewBlock Project page and specification, accessed 2026-05-26.
+
+\bibitem{diffie1976}
+Whitfield Diffie\bibAnd 1Martin~E. Hellman:
+\bibNewBlock New directions in cryptography.
+\bibNewBlock {\em IEEE Transactions on Information Theory}, 22. \'evf. (1976)
+  6. sz., 644--654.~p.
+
+\bibitem{grover1996}
+Lov~K. Grover:
+\bibNewBlock A fast quantum mechanical algorithm for database search.
+\bibNewBlock In {\em Proceedings of the 28th Annual ACM Symposium on Theory of
+  Computing} (kon\-fe\-ren\-cia\-anyag).
+\bibNewBlock 1996, ACM, 212--219.~p.
+
+\bibitem{iot_forecast_2023}
+{IoT Analytics}:
+\bibNewBlock State of iot -- spring 2023.
+\bibNewBlock \url{https://iot-analytics.com/number-connected-iot-devices/},
+  2023.
+
+\bibitem{mirai2016}
+Brian Krebs:
+\bibNewBlock Hacked cameras, dvrs powered today's massive internet outage.
+\bibNewBlock Krebs on Security, 2016.
+\bibNewBlock
+  \url{https://krebsonsecurity.com/2016/10/hacked-cameras-dvrs-powered-todays-massive-internet-outage/}.
+
+\bibitem{mckinsey_iot}
+{McKinsey Global Institute}:
+\bibNewBlock The internet of things: Mapping the value beyond the hype.
+\bibNewBlock McKinsey \& Company report, 2015.
+
+\bibitem{NIST-Select-2022}
+Nist selects first four quantum-resistant cryptographic algorithms.
+\bibNewBlock
+  \url{https://www.nist.gov/news-events/news/2022/07/nist-selects-first-four-quantum-resistant-cryptographic-algorithms}.
+\bibNewBlock NIST press release, 2022.
+
+\bibitem{NIST-PQC}
+Post-quantum cryptography project.
+\bibNewBlock \url{https://csrc.nist.gov/projects/post-quantum-cryptography}.
+\bibNewBlock NIST project page, accessed 2026-05-26.
+
+\bibitem{shannon1949}
+Claude~E. Shannon:
+\bibNewBlock Communication theory of secrecy systems.
+\bibNewBlock {\em Bell System Technical Journal}, 28. \'evf. (1949) 4. sz.,
+  656--715.~p.
+
+\bibitem{shor1994}
+Peter~W. Shor:
+\bibNewBlock Algorithms for quantum computation: discrete logarithms and
+  factoring.
+\bibNewBlock In {\em Proceedings of the 35th Annual Symposium on Foundations of
+  Computer Science} (kon\-fe\-ren\-cia\-anyag).
+\bibNewBlock 1994, IEEE, 124--134.~p.
+
+\bibitem{weiser1991}
+Mark Weiser:
+\bibNewBlock The computer for the 21st century.
+\bibNewBlock {\em Scientific American}, 265. \'evf. (1991) 3. sz., 94--104.~p.
 
 \end{thebibliography}

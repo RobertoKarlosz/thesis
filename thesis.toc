@@ -1,25 +1,114 @@
 \select@language {magyar} \contentsline {chapter}{Kivonat}{i}{chapter*.2}%
 \select@language {english} \contentsline {chapter}{Abstract}{ii}{chapter*.3}%
 \select@language {magyar} \contentsline {chapter}{\numberline {1}Bevezetés}{1}{chapter.1}%
-\select@language {magyar} \contentsline {section}{\numberline {1.1}Posztkvantum-kriptográfiai alapelvek}{1}{section.1.1}%
-\select@language {magyar} \contentsline {section}{\numberline {1.2}A rács alapú titkosítás}{2}{section.1.2}%
-\select@language {magyar} \contentsline {section}{\numberline {1.3}Az LWE séma}{2}{section.1.3}%
-\select@language {magyar} \contentsline {chapter}{\numberline {2}Protokollok ismertetése}{3}{chapter.2}%
-\select@language {magyar} \contentsline {section}{\numberline {2.1}Kyber protocoll}{3}{section.2.1}%
-\select@language {magyar} \contentsline {subsection}{\numberline {2.1.1}Paraméterek és kulcskészítés}{3}{subsection.2.1.1}%
-\select@language {magyar} \contentsline {subsection}{\numberline {2.1.2}Üzenet titkosítása}{3}{subsection.2.1.2}%
-\select@language {magyar} \contentsline {subsection}{\numberline {2.1.3}Titkosítás visszafejtése}{3}{subsection.2.1.3}%
-\select@language {magyar} \contentsline {section}{\numberline {2.2}Kriptográfiai protokollok}{4}{section.2.2}%
-\select@language {magyar} \contentsline {section}{\numberline {2.3}CRYSTALS-Kyber protokoll}{4}{section.2.3}%
-\select@language {magyar} \contentsline {section}{\numberline {2.4}BIKE protokoll}{4}{section.2.4}%
-\select@language {magyar} \contentsline {chapter}{\numberline {3}Környezet}{5}{chapter.3}%
-\select@language {magyar} \contentsline {chapter}{\numberline {4}Mérés metodotógia}{6}{chapter.4}%
-\select@language {magyar} \contentsline {chapter}{\numberline {5}Mérés}{7}{chapter.5}%
-\select@language {magyar} \contentsline {chapter}{\numberline {6}Eredények}{8}{chapter.6}%
-\select@language {magyar} \contentsline {chapter}{\numberline {7}Javaslatok}{9}{chapter.7}%
-\select@language {magyar} \contentsline {chapter}{Köszönetnyilvánítás}{10}{chapter*.4}%
-\select@language {magyar} \contentsline {chapter}{Irodalomjegyz\'ek}{11}{chapter*.4}%
-\select@language {magyar} \contentsline {chapter}{Függelék}{12}{appendix*.6}%
-\select@language {magyar} \contentsline {section}{\numberline {F.1}Nyilatkozat generatív mesterséges intelligencia alkalmazásáról}{12}{section.F.1}%
-\select@language {magyar} \contentsline {section}{\numberline {F.2}A TeXstudio felülete}{13}{section.F.2}%
-\select@language {magyar} \contentsline {section}{\numberline {F.3}Válasz az ,,Élet, a világmindenség, meg minden'' kérdésére}{14}{section.F.3}%
+\select@language {magyar} \contentsline {section}{\numberline {1.1}A kriptográfia és az információbiztonság rövid története}{1}{section.1.1}%
+\select@language {magyar} \contentsline {section}{\numberline {1.2}Kvantumszámítógépek}{3}{section.1.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {1.2.1}A kvantumszámítás működési elvei}{3}{subsection.1.2.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {1.2.2}A kvantumszámítógépek előnyei és lehetőségei}{4}{subsection.1.2.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {1.2.3}Veszélyek a jelenlegi kriptográfiai rendszerekre}{4}{subsection.1.2.3}%
+\select@language {magyar} \contentsline {section}{\numberline {1.3}A dolgok internete}{5}{section.1.3}%
+\select@language {magyar} \contentsline {subsection}{\numberline {1.3.1}Az IoT kialakulása és fejlődése}{5}{subsection.1.3.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {1.3.2}IoT eszközök jellemzői és korlátai}{6}{subsection.1.3.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {1.3.3}IoT biztonsági kihívások}{6}{subsection.1.3.3}%
+\select@language {magyar} \contentsline {section}{\numberline {1.4}Posztkvantum-kriptográfia és IoT --- a kapcsolat}{7}{section.1.4}%
+\select@language {magyar} \contentsline {section}{\numberline {1.5}A dolgozat céljai és felépítése}{8}{section.1.5}%
+\select@language {magyar} \contentsline {chapter}{\numberline {2}Posztkvantum-kriptográfiai protokollok}{9}{chapter.2}%
+\select@language {magyar} \contentsline {section}{\numberline {2.1}Posztkvantum-kriptográfia matematikai alapjai}{9}{section.2.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.1.1}A rácselmélet alapjai}{9}{subsection.2.1.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.1.2}Az LWE probléma és annak moduláris változata}{10}{subsection.2.1.2}%
+\select@language {magyar} \contentsline {section}{\numberline {2.2}CRYSTALS-Kyber protokoll}{10}{section.2.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.2.1}Paraméterek és biztonsági szintek}{10}{subsection.2.2.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.2.2}Kulcscsere és kulcsencapsulation}{11}{subsection.2.2.2}%
+\select@language {magyar} \contentsline {subsubsection}{\numberline {2.2.2.1}Kulcsgenerálás (KeyGen)}{11}{subsubsection.2.2.2.1}%
+\select@language {magyar} \contentsline {subsubsection}{\numberline {2.2.2.2}Üzenet encapsulation (Encaps)}{11}{subsubsection.2.2.2.2}%
+\select@language {magyar} \contentsline {subsubsection}{\numberline {2.2.2.3}Üzenet decapsulation (Decaps)}{12}{subsubsection.2.2.2.3}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.2.3}Biztonsági tulajdonságok és hardver gyorsulás}{12}{subsection.2.2.3}%
+\select@language {magyar} \contentsline {section}{\numberline {2.3}BIKE (Bit Flipping Key Encapsulation) protokoll}{12}{section.2.3}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.3.1}Kód-alapú titkosítás alapelvei}{12}{subsection.2.3.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.3.2}MDPC kódok és az BIKE paraméterek}{13}{subsection.2.3.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.3.3}BIKE kulcsgenerálás és encapsulation}{13}{subsection.2.3.3}%
+\select@language {magyar} \contentsline {subsubsection}{\numberline {2.3.3.1}Kulcsgenerálás (KeyGen)}{13}{subsubsection.2.3.3.1}%
+\select@language {magyar} \contentsline {subsubsection}{\numberline {2.3.3.2}Üzenet encapsulation (Encaps)}{14}{subsubsection.2.3.3.2}%
+\select@language {magyar} \contentsline {subsubsection}{\numberline {2.3.3.3}Üzenet decapsulation (Decaps) és bit-flipping dekódolás}{14}{subsubsection.2.3.3.3}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.3.4}Biztonsági tulajdonságok}{14}{subsection.2.3.4}%
+\select@language {magyar} \contentsline {section}{\numberline {2.4}Oldalsávos támadások és biztonsági implementáció}{15}{section.2.4}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.4.1}Időzítési támadások (Timing Attacks)}{15}{subsection.2.4.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.4.2}Energiafogyasztási támadások (Power Analysis)}{15}{subsection.2.4.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.4.3}Hibabeviteli támadások (Fault Injection)}{15}{subsection.2.4.3}%
+\select@language {magyar} \contentsline {section}{\numberline {2.5}IoT alkalmazások és integráció}{16}{section.2.5}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.5.1}Kyber IoT implementáció}{16}{subsection.2.5.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.5.2}BIKE IoT implementáció}{16}{subsection.2.5.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.5.3}Hibrid megközelítés az IoT-ben}{16}{subsection.2.5.3}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.5.4}Memória- és tárolási követelmények}{17}{subsection.2.5.4}%
+\select@language {magyar} \contentsline {section}{\numberline {2.6}Kyber és BIKE összehasonlítása}{17}{section.2.6}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.6.1}Biztonsági megfontolások}{17}{subsection.2.6.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.6.2}Teljesítmény- és méret-jellemzők}{17}{subsection.2.6.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.6.3}Gyakorlati alkalmazások}{17}{subsection.2.6.3}%
+\select@language {magyar} \contentsline {subsection}{\numberline {2.6.4}Hibrid megközelítés}{18}{subsection.2.6.4}%
+\select@language {magyar} \contentsline {chapter}{\numberline {3}Mérési környezet}{19}{chapter.3}%
+\select@language {magyar} \contentsline {section}{\numberline {3.1}Hardverkörnyezet}{19}{section.3.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {3.1.1}Tesztplatform specifikációja}{19}{subsection.3.1.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {3.1.2}Hálózati topológia}{19}{subsection.3.1.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {3.1.3}Energiaellátás és mérőeszközök}{19}{subsection.3.1.3}%
+\select@language {magyar} \contentsline {section}{\numberline {3.2}Szoftverkörnyezet}{19}{section.3.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {3.2.1}Operációs rendszer és alapkönyvtárak}{19}{subsection.3.2.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {3.2.2}Kriptográfiai könyvtárak}{19}{subsection.3.2.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {3.2.3}MQTT infrastruktúra}{19}{subsection.3.2.3}%
+\select@language {magyar} \contentsline {subsection}{\numberline {3.2.4}Konténerizáció és reprodukálhatóság}{19}{subsection.3.2.4}%
+\select@language {magyar} \contentsline {section}{\numberline {3.3}A mérési környezet összefoglalása}{19}{section.3.3}%
+\select@language {magyar} \contentsline {chapter}{\numberline {4}Mérés metodotógia}{20}{chapter.4}%
+\select@language {magyar} \contentsline {section}{\numberline {4.1}Mosquitto alapú MQTT laboratóriumi környezet kialakítása posztkvantum kriptográfiai támogatással}{20}{section.4.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.1}Bevezetés}{20}{subsection.4.1.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.2}A labor célja és architektúrája}{20}{subsection.4.1.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.3}Operációs rendszer és alapcsomagok telepítése}{21}{subsection.4.1.3}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.4}Docker környezet kialakítása}{22}{subsection.4.1.4}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.5}Az Open Quantum Safe projekt komponensei}{22}{subsection.4.1.5}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.6}liboqs fordítása és telepítése}{23}{subsection.4.1.6}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.7}OpenSSL 3.3 fordítása}{23}{subsection.4.1.7}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.8}OQS Provider fordítása}{24}{subsection.4.1.8}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.9}Környezeti változók konfigurálása}{24}{subsection.4.1.9}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.10}Az OpenSSL működésének ellenőrzése}{24}{subsection.4.1.10}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.11}Mosquitto MQTT broker telepítése}{24}{subsection.4.1.11}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.12}TLS tanúsítványok létrehozása}{24}{subsection.4.1.12}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.13}Mosquitto TLS konfiguráció}{25}{subsection.4.1.13}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.14}A broker indítása és tesztelése}{25}{subsection.4.1.14}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.15}MQTT kommunikáció ellenőrzése}{25}{subsection.4.1.15}%
+\select@language {magyar} \contentsline {subsection}{\numberline {4.1.16}Összegzés}{26}{subsection.4.1.16}%
+\select@language {magyar} \contentsline {chapter}{\numberline {5}Mérések}{27}{chapter.5}%
+\select@language {magyar} \contentsline {section}{\numberline {5.1}Mérési forgatókönyvek}{27}{section.5.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {5.1.1}Alap kriptográfiai műveletek mérése}{27}{subsection.5.1.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {5.1.2}TLS kézfogás (handshake) mérése}{27}{subsection.5.1.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {5.1.3}Terheléses mérés}{27}{subsection.5.1.3}%
+\select@language {magyar} \contentsline {section}{\numberline {5.2}Mérési módszer és adatgyűjtés}{27}{section.5.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {5.2.1}Időmérés megvalósítása}{27}{subsection.5.2.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {5.2.2}Memóriahasználat mérése}{27}{subsection.5.2.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {5.2.3}Energiafogyasztás mérése}{27}{subsection.5.2.3}%
+\select@language {magyar} \contentsline {section}{\numberline {5.3}Mérési eredmények}{27}{section.5.3}%
+\select@language {magyar} \contentsline {subsection}{\numberline {5.3.1}Kyber-512 eredmények}{27}{subsection.5.3.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {5.3.2}Kyber-768 és Kyber-1024 eredmények}{27}{subsection.5.3.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {5.3.3}BIKE-L1 eredmények}{27}{subsection.5.3.3}%
+\select@language {magyar} \contentsline {subsection}{\numberline {5.3.4}BIKE-L3 és BIKE-L5 eredmények}{27}{subsection.5.3.4}%
+\select@language {magyar} \contentsline {subsection}{\numberline {5.3.5}TLS kézfogás összesítő adatok}{27}{subsection.5.3.5}%
+\select@language {magyar} \contentsline {section}{\numberline {5.4}A mérések összefoglalása}{27}{section.5.4}%
+\select@language {magyar} \contentsline {chapter}{\numberline {6}Eredmények kiértékelése}{28}{chapter.6}%
+\select@language {magyar} \contentsline {section}{\numberline {6.1}Teljesítmény összehasonlítása}{28}{section.6.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {6.1.1}Futási idő összehasonlítása}{28}{subsection.6.1.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {6.1.2}Memóriaigény összehasonlítása}{28}{subsection.6.1.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {6.1.3}Kulcs- és kapszulaméret összehasonlítása}{28}{subsection.6.1.3}%
+\select@language {magyar} \contentsline {subsection}{\numberline {6.1.4}TLS kézfogás teljesítménye}{28}{subsection.6.1.4}%
+\select@language {magyar} \contentsline {section}{\numberline {6.2}Biztonsági szempontú értékelés}{28}{section.6.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {6.2.1}Biztonsági szintek és NIST kategóriák}{28}{subsection.6.2.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {6.2.2}Ismert kriptanalitikai eredmények}{28}{subsection.6.2.2}%
+\select@language {magyar} \contentsline {section}{\numberline {6.3}Alkalmazhatósági elemzés}{28}{section.6.3}%
+\select@language {magyar} \contentsline {subsection}{\numberline {6.3.1}Erőforrás-korlátozott eszközökre vonatkozó következtetések}{28}{subsection.6.3.1}%
+\select@language {magyar} \contentsline {subsection}{\numberline {6.3.2}Protokoll-szintű kihívások}{28}{subsection.6.3.2}%
+\select@language {magyar} \contentsline {subsection}{\numberline {6.3.3}Kyber és BIKE összehasonlító értékelése}{28}{subsection.6.3.3}%
+\select@language {magyar} \contentsline {section}{\numberline {6.4}Az eredmények összefoglalása}{28}{section.6.4}%
+\select@language {magyar} \contentsline {chapter}{\numberline {7}Összefoglalás és javaslatok}{29}{chapter.7}%
+\select@language {magyar} \contentsline {section}{\numberline {7.1}A dolgozat eredményeinek összefoglalása}{29}{section.7.1}%
+\select@language {magyar} \contentsline {section}{\numberline {7.2}Javaslatok IoT rendszerek PQC migrációjához}{29}{section.7.2}%
+\select@language {magyar} \contentsline {section}{\numberline {7.3}Jövőbeli kutatási irányok}{29}{section.7.3}%
+\select@language {magyar} \contentsline {chapter}{Köszönetnyilvánítás}{30}{chapter*.4}%
+\select@language {magyar} \contentsline {chapter}{Irodalomjegyz\'ek}{31}{chapter*.4}%
+\select@language {magyar} \contentsline {chapter}{Függelék}{32}{appendix*.6}%
+\select@language {magyar} \contentsline {section}{\numberline {F.1}Nyilatkozat generatív mesterséges intelligencia alkalmazásáról}{32}{section.F.1}%

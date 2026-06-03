@@ -1,0 +1,18 @@
+foreground = yes
+debug = 4
+syslog = no
+output = /dev/stdout
+
+pid = /run/stunnel/stunnel-server.pid
+
+[mqtt-pqc-server]
+accept  = 0.0.0.0:8883
+connect = 127.0.0.1:1883
+
+cert = /certs/server.crt
+key  = /certs/server.key
+
+sslVersion = TLSv1.3
+curves = ${PQC_ALG}
+
+TIMEOUTclose = 0

@@ -1,0 +1,74 @@
+This is BibTeX, Version 0.99d (TeX Live 2023/Debian)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: thesis.aux
+The style file: huplain.bst
+A level-1 auxiliary file: include/titlepage.aux
+A level-1 auxiliary file: include/declaration_HU.aux
+A level-1 auxiliary file: content/abstract.aux
+A level-1 auxiliary file: content/introduction.aux
+A level-1 auxiliary file: content/protocol-theory.aux
+A level-1 auxiliary file: content/enviroment.aux
+A level-1 auxiliary file: content/measurement-methods.aux
+A level-1 auxiliary file: content/measurements.aux
+A level-1 auxiliary file: content/measurment-review.aux
+A level-1 auxiliary file: content/suggestions.aux
+A level-1 auxiliary file: content/acknowledgement.aux
+A level-1 auxiliary file: content/appendices.aux
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated glb_str_ptr (elt_size=4) to 20 items from 10.
+Reallocated global_strs (elt_size=200001) to 20 items from 10.
+Reallocated glb_str_end (elt_size=4) to 20 items from 10.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Database file #1: bib/mybib.bib
+Warning--to sort, need author/key/name in NIST-Select-2022
+Warning--to sort, need author/key/name in CRYSTALS-KYBER
+Warning--to sort, need author/key/name in BIKE-SPEC
+Warning--to sort, need author/key/name in NIST-PQC
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+You've used 14 entries,
+            4991 wiz_defined-function locations,
+            1213 strings with 13740 characters,
+and the built_in function-call counts, 32297 in all, are:
+= -- 6089
+> -- 85
+< -- 13
++ -- 2371
+- -- 60
+* -- 471
+:= -- 1178
+add.period$ -- 49
+call.type$ -- 14
+change.case$ -- 57
+chr.to.int$ -- 0
+cite$ -- 18
+duplicate$ -- 4910
+empty$ -- 686
+format.name$ -- 24
+if$ -- 6831
+int.to.chr$ -- 0
+int.to.str$ -- 14
+missing$ -- 6
+newline$ -- 170
+num.names$ -- 20
+pop$ -- 1123
+preamble$ -- 1
+purify$ -- 43
+quote$ -- 22
+skip$ -- 216
+stack$ -- 0
+substring$ -- 3799
+swap$ -- 3538
+text.length$ -- 13
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 70
+warning$ -- 4
+while$ -- 143
+width$ -- 16
+write$ -- 243
+(There were 4 warnings)
