@@ -8,7 +8,7 @@ szintjéhez igazított. A 20.\ század végén lezajlott digitális forradalom a
 helyzetet teremtett: a kriptográfia többé nem pusztán katonai vagy diplomáciai eszköz, hanem a
 globális digitális infrastruktúra alapköve. Bankrendszerek, egészségügyi nyilvántartások, ipari
 vezérlőrendszerek és hétköznapi kommunikáció egyaránt a nyilvános kulcsú kriptográfia védelmére
-támaszkodik. E rendszerek biztonsága matematikai problémák számítási nehézségére épül --- egy
+támaszkodik. E rendszerek biztonsága matematikai problémák számítási nehézségére épül -- egy
 feltevésre, amelynek érvényessége a közeljövőben komolyan megkérdőjeleződhet.
 
 Párhuzamosan a digitális forradalom kibontakozásával egy másik technológiai változás is lezajlott:
@@ -16,18 +16,18 @@ a dolgok internete (Internet of Things, IoT) robbanásszerű terjedése. Beágya
 érzékelők és hálózati kapcsolat ma már nem csupán számítógépekben, hanem ipari gépekben, orvosi
 implantátumokban, okos otthonokban és kritikus infrastruktúrában is megtalálható. A becslések
 szerint 2030-ra több mint 25 milliárd hálózatba kötött eszköz lesz forgalomban~\cite{iot_forecast_2023},
-amelyek mindegyike érzékeny adatokat generál, tárol és továbbít, miközben erőforrásaikban ---
-számítási teljesítményben, memóriában és energiában --- erősen korlátozottak.
+amelyek mindegyike érzékeny adatokat generál, tárol és továbbít, miközben erőforrásaikban --
+számítási teljesítményben, memóriában és energiában -- erősen korlátozottak.
 
 A két tendencia találkozásánál egy harmadik, egyre fenyegetőbb fejlemény jelenik meg: a
 kvantumszámítógépek fejlődése. A kvantummechanika elvein alapuló számítási paradigma alkalmas arra,
 hogy a ma használt nyilvános kulcsú kriptográfiai rendszerek matematikai alapjait polinomiális időn
 belül megoldja. Ez azt jelenti, hogy egy kellően erős kvantumszámítógép megjelenésével a jelenlegi
-titkosítási infrastruktúra teljes egészében sérülékennyé válik --- nem csupán a jövőbeli
+titkosítási infrastruktúra teljes egészében sérülékennyé válik -- nem csupán a jövőbeli
 kommunikáció, hanem a ma titkosított és elmentett forgalom is, amelyet a jövőben visszafejtenek.
 
-A dolgozat célja, hogy megvizsgálja, hogy hogyan lehet posztkvantum-kriptográfiai (PQC) megoldásokat ---
-konkrétan a CRYSTALS-Kyber és a BIKE kulcskapszulázó algoritmusokat --- hatékonyan alkalmazni
+A dolgozat célja, hogy megvizsgálja, hogy hogyan lehet posztkvantum-kriptográfiai (PQC) megoldásokat --
+konkrétan a CRYSTALS-Kyber és a BIKE kulcskapszulázó algoritmusokat -- hatékonyan alkalmazni
 erőforrás-korlátozott IoT környezetekben. A bevezető fejezet az elméleti hátteret tárgyalja:
 bemutatja a kriptográfia fejlődésének történetét, részletezi a kvantumszámítógépek működési elvét,
 előnyeit és veszélyeit, majd ismerteti az IoT ökoszisztéma sajátosságait és biztonsági kihívásait,
@@ -42,14 +42,14 @@ A titkosírás legkorábbi ismert példái az ókori Egyiptomból származnak, a
 módosított hieroglifákat alkalmaztak a szöveg értelmének elrejtésére. Az ókori Görögországban a
 szkütalé nevű hengerrel transzpozíciós titkosítást végeztek, míg Julius Caesar a nevét viselő
 Caesar-rejtjellel titkosította katonai üzeneteit: minden betűt az ábécé harmadik következő betűjével
-helyettesített. Ezek az ún.\ klasszikus rejtjelek helyettesítésen vagy transzpozíción alapultak, és
+helyettesített. Ezek az ún.\ klasszikus rejtjelek helyettesítésen vagy transzpozíción alapultak, azonban
 a kriptoanalízis fejlődésével rendszeresen feltörhetővé váltak.
 
 A középkorban a polialfabetikus rejtjelezés megjelenése (Vigenère-rejtjel, 1553) egy lépéssel
 előrébb vitte a titkosítás nehézségét, ám a Kasiski-teszt (1863) és a Friedman-koincidensiindex
 (1920-as évek) módszereivel ez a megközelítés is feltörhetőnek bizonyult. A klasszikus kriptográfia
 lényegi korlátja az volt, hogy minden rendszer biztonsága a kulcs titkosságán alapult, miközben a
-kulcsot valahogyan biztonságosan el kellett juttatni a kommunikáló felekhez --- ez az ún.\ kulcsterjesztési
+kulcsot valahogyan biztonságosan el kellett juttatni a kommunikáló felekhez -- ez az ún.\ kulcsterjesztési
 probléma, amely évszázadokig megoldhatatlannak tűnt.
 
 A modern kriptográfia alapjait a 20.\ század első felében fektették le. A második világháborúban az
@@ -59,7 +59,7 @@ fejlődését. Alan Turing, Gordon Welchman és munkatársaik az elektromechanik
 segítségével automatiulizálták az Enigma-kulcsok feltörését, és ezzel a kriptanalízist ipari méretűvé
 tették. Claude Shannon 1949-es munkája, a \textit{Communication Theory of Secrecy Systems}
 matematikai alapokra helyezte az információelmélet és a kriptográfia kapcsolatát: bevezette az
-entrópia, a tökéletes titkosság és a biztonság formális fogalmait~\cite{shannon1949}. Shannon
+entrópia, a tökéletes titkosság és a biztonság formális fogalmait. Shannon
 megmutatta, hogy tökéletes titkosság egyetlen rendszertől, az egyszer használatos rejtjeltől
 (one-time pad) várható el, amely azonban kulcskezelési okokból nem praktikusan alkalmazható.
 
@@ -70,7 +70,7 @@ amely az IBM Lucifer algoritmusán alapult, és amelynek tervezésébe az NSA is
 évtizedekig ipari szabvány maradt, ám 1998-ban az EFF (Electronic Frontier Foundation) \textit{Deep
 Crack} nevű dedikált hardverével 56 óra alatt visszafejtett egy DES-titkosított üzenetet,
 egyértelműen bizonyítva az algoritmus elavultságát. Utódja, a 2001-ben szabványosított AES (Advanced
-Encryption Standard) --- Vincent Rijmen és Joan Daemen Rijndael algoritmusán alapulva --- máig az
+Encryption Standard) -- Vincent Rijmen és Joan Daemen Rijndael algoritmusán alapulva -- máig az
 egyik legelterjedtebb szimmetrikus titkosítási algoritmus.
 
 Az igazi paradigmaváltást azonban a nyilvános kulcsú kriptográfia 1976-os bevezetése jelentette.
@@ -88,11 +88,7 @@ függetlenül javasolta az elliptikus görbe kriptográfia (ECC) alkalmazását,
 elliptikus görbék pontjait alkalmazzák. Az ECC kisebb kulcsmérettel nyújt azonos biztonsági szintet
 az RSA-hoz képest, ami mobil és beágyazott alkalmazásokban komoly előnnyé vált.
 
-A 2000-es évektől a kriptográfia az internet mindennapi infrastruktúrájává vált. A TLS (Transport
-Layer Security) protokoll révén az RSA és az ECC az HTTPS, a biztonságos e-mail és a VPN
-alapszöveteként működik. A nyilvános kulcsú infrastruktúra (PKI) tanúsítványok millióit gondozza,
-és az internet kommunikáció biztonságának gerincét alkotja. Ez a globális, komplex infrastruktúra
-áll most szemben a kvantumszámítástechnika által felvetett kihívással.
+A 2000-es évektől a kriptográfia az internet mindennapi infrastruktúrájává vált. Az új protokolloknak már alapkövetelménye a megfelelő szintű titkosítás. A titkosítást nem alkalmazó megoldásokat folyamatosan vezetik ki az internet forgalmából. Mára elképzeltetlennek tűnik egy olyan weboldal, amely nem használ HTTPS-t, vagy egy e-mail szolgáltató, amely nem támogatja a TLS-t. A VPN-ek, a biztonságos fájltárolás és a digitális aláírások mind a nyilvános kulcsú kriptográfia eredményei, amelyek nélkülözhetetlenek a modern digitális élethez. Azonban ez a globális infrastruktúra most szembesül azzal a fenyegetéssel, hogy a kvantumszámítógépek megjelenésével gyakorlatilag azonnal elavulttá válik.
 
 
 %----------------------------------------------------------------------------
@@ -100,15 +96,15 @@ alapszöveteként működik. A nyilvános kulcsú infrastruktúra (PKI) tanúsí
 %----------------------------------------------------------------------------
 
 A kvantumszámítógépek nem egyszerűen gyorsabb klasszikus számítógépek: egy alapvetően más számítási
-paradigmát képviselnek, amely a kvantummechanika sajátos jelenségeit --- a szuperpozíciót, az
-összefonódást és az interferenciát --- használja fel számítási erőforrásként. Ennek megértése
+paradigmát képviselnek, amely a kvantummechanika sajátos jelenségeit -- a szuperpozíciót, az
+összefonódást és az interferenciát -- használja fel számítási erőforrásként. Ennek megértése
 nélkülözhetetlen a kriptográfiai következmények értékeléséhez.
 
 \subsection{A kvantumszámítás működési elvei}
 
 A klasszikus számítástechnika alapegysége a bit, amely kizárólag a 0 vagy az 1 értéket veheti fel.
 A kvantumszámítógép alapegysége a kvantumbit, röviden qubit, amelynek állapotát a kvantummechanika
-szabályai írják le. A qubit állapotát egy kétdimenziós komplex Hilbert-tér elemeként ábrázoljuk:
+szabályai írják le. A qubit állapotát egy kétdimenziós komplex Hilbert-tér elemeként ábrázolhatjuk legkönnyebben a Bloch-gömb segítségével. Egy qubit általános állapota egy szuperpozíció, amely a következőképpen írható fel:
 $$\vert\psi\rangle = \alpha\vert 0\rangle + \beta\vert 1\rangle,$$
 ahol $\alpha, \beta \in \mathbb{C}$ és $\vert\alpha\vert^2 + \vert\beta\vert^2 = 1$. Ez azt jelenti,
 hogy mérés előtt a qubit egyszerre tartalmazza a $\vert 0\rangle$ és a $\vert 1\rangle$ állapotot,
@@ -116,7 +112,7 @@ az ún.\ szuperpozíció elvének megfelelően. Mérés hatására a szuperpozí
 valószínűséggel kapjuk a 0-t, $\vert\beta\vert^2$ valószínűséggel az 1-et.
 
 A szuperpozíció önmagában még nem tenné hatékonnyá a kvantumszámítást. A másik kulcsfontosságú
-jelenség az összefonódás (entanglement): két qubit összefonódott állapotban olyan módon korrelált,
+jelenség az összefonódás (entanglement): két qubit összefonódott állapotban olyan módon korrelál,
 hogy az egyik mérési eredménye azonnali hatással van a másikra, függetlenül a köztük lévő fizikai
 távolságtól. Az összefonódás következménye, hogy $n$ qubit nem $2n$, hanem $2^n$ állapot egyidejű
 reprezentációjára képes. Egy 300 qubites rendszer több lehetséges állapotot reprezentál egyszerre,
@@ -157,12 +153,12 @@ molekulák elektronszerkezetét kvantummechanikai szinten szimulálni. Míg klas
 egy közepes méretű molekula pontos szimulációja exponenciálisan növekvő erőforrást igényel,
 addig egy kvantumszámítógép természetes hatókörébe esik a feladat. Ez közvetlen alkalmazást ígér
 a gyógyszerfejlesztésben (hatóanyag--fehérje kölcsönhatások), az anyagtudományban (új szupravezetők,
-akkumulátormateriak tervezése) és a katalízisvizsgálatban.
+akkumulátor anyagok tervezése) és a katalízisvizsgálatban.
 
-\textbf{Optimalizálási feladatok} esetén a kvantum heuristikák --- mint a Quantum Approximate
-Optimization Algorithm (QAOA) és a Quantum Annealing --- NP-nehéz problémák közelítő megoldására
-mutatnak ígéretes eredményeket. Logisztika, ellátásilánc-tervezés, pénzügyi portfólióoptimalizálás
-és menetrend-tervezés területén már kisebb méretű kísérletekben is demonstráltak kvantum
+\textbf{Optimalizálási feladatok} esetén a kvantum heuristikák -- mint a Quantum Approximate
+Optimization Algorithm (QAOA) és a Quantum Annealing -- NP-nehéz problémák közelítő megoldására
+mutatnak ígéretes eredményeket. Logisztika, ellátásilánc-tervezés, pénzügyi portfólió-optimalizálás
+és menetrendtervezés területén már kisebb méretű kísérletekben is demonstráltak kvantum
 előnyt.
 
 A \textbf{pénzügyi modellezésben} a Monte Carlo-szimulációk kvantum gyorsítása négyzetgyök-csökkentést
@@ -178,26 +174,26 @@ a PQC-t.
 
 \subsection{Veszélyek a jelenlegi kriptográfiai rendszerekre}
 
-A kvantumszámítógépek kriptográfiai fenyegetése két alapvető algoritmuson keresztül materializálódik.
+A kvantumszámítógépek kriptográfiai fenyegetése két alapvető algoritmuson keresztül valósul meg.
 
-\textbf{A Shor-algoritmus} 1994-ben Peter Shor bebizonyította, hogy egy kvantumszámítógép polinomiális
+\textbf{A Shor-algoritmus:} 1994-ben Peter Shor bebizonyította, hogy egy kellően erős kvantumszámítógép polinomiális
 idő alatt képes az egészfaktorizáció és a diszkrét logaritmus problémájának megoldásá\-ra~\cite{shor1994}.
 Az algoritmus kvantum-Fourier-transzformációt alkalmaz az adott szám prímtényezőinek
 meghatározásához. A faktorizálás időbonyolultsága $O((\log N)^3)$, szemben a legjobb ismert
 klasszikus szub-exponenciális algoritmussal, az általános számmező szitával (GNFS), amely körülbelül
-$O(\exp((\log N)^{1/3}))$ nagyságrendű. Ez közvetlenül aláása az RSA, a Diffie--Hellman
+$O(\exp((\log N)^{1/3}))$ nagyságrendű. Ez közvetlenül aláássa az RSA, a Diffie--Hellman
 kulcscsere és az ECC biztonságát: az RSA-2048 feltöréséhez hozzávetőleg 4\,000 hibajavított
-logikai qubit szükséges --- ez a szám a jelenlegi fejlesztési ütem alapján a 2030-as évekre
-lehet elérhető.
+logikai qubit szükséges -- ez a szám a jelenlegi fejlesztési ütem alapján akár a 2030-as évekre
+el is érhető.
 
-\textbf{A Grover-algoritmus} 1996-ban Lov Grover megmutatta, hogy egy $N$ elemű rendezetlen
-adatbázisban a keresés kvantumszámítógépen $O(\sqrt{N})$ lépésben elvégezhető~\cite{grover1996},
+\textbf{A Grover-algoritmus:} 1996-ban Lov Grover megmutatta, hogy egy $N$ elemű rendezetlen
+adatbázisban a keresés kvantumszámítógépen $O(\sqrt{N})$ lépésben elvégezhető,
 szemben a klasszikus $O(N)$ lépéssel. Szimmetrikus kriptográfiánál ez a négyzetgyök-gyorsulás azt
 jelenti, hogy egy 128 bites AES kulcs bruteforce-keresése olyan, mintha 64 bites kulcsra kellene
 keresni: a megoldás a kulcsméretek megduplázása, azaz az AES-256 alkalmazása. A szimmetrikus
 kriptográfia tehát módosítással kvantum-ellenálló maradhat.
 
-A legjelentősebb stratégiai veszélyt azonban a \textbf{,,gyűjtsd most, fejtsd meg később''}
+A legjelentősebb stratégiai veszélyt azonban a \textbf{„gyűjtsd most, fejtsd meg később"}
 (harvest-now, decrypt-later, HNDL) stratégia jelenti. Állami szintű szereplők és fejlett
 kiberbűnözői csoportok már most gyűjthetik a titkosított hálózati forgalmat, hogy azt egy
 jövőbeli kvantumszámítógéppel visszafejtsék. Azok az adatok, amelyeknek ma titkosítva kell
@@ -227,7 +223,7 @@ Az ,,összes dolgot hálózatba kötni'' ötlete valójában megelőzi az ,,Inte
 Mark Weiser, a Xerox PARC kutatója 1991-es \textit{The Computer for the 21st Century} esszéjében
 lefektette az ubiquitous computing (mindenütt jelenlévő számítástechnika) koncepcióját: elképzelte,
 hogy számítástechnikai eszközök a mindennapi tárgyakba integrálódnak, és a felhasználó számára
-láthatatlanul végzik munkájukat~\cite{weiser1991}. Az 1990-es évek elején a Carnegie Mellon
+láthatatlanul végzik munkájukat. Az 1990-es évek elején a Carnegie Mellon
 Egyetemen már létezett az első hálózatba kötött automatával bemutatott kísérlet, amely szenzorok
 segítségével tájékoztatta a felhasználókat az üdítőgép aktuális tartalmáról.
 
@@ -235,7 +231,7 @@ A ,,dolgok internete'' elnevezést Kevin Ashton brit technológus alkotta meg 19
 az RFID (rádiófrekvenciás azonosítás) és az ellátásilánc-menedzsment összefüggésében. Az elgondolás
 lényege, hogy ha minden fizikai tárgyhoz egyedi azonosítót és hálózati kapcsolatot rendelünk, az
 objektumok maguk is adatforrásokká válnak, és a valós világ állapota automatikusan nyomon
-követhetővé válik~\cite{ashton1999}. Az RFID technológia lehetővé tette például a raktári
+követhetővé válik. Az RFID technológia lehetővé tette például a raktári
 készletezés automatizálását, amelyet a Procter \& Gamble és az Auto-ID Center együttműködésével
 fejlesztett ki.
 
@@ -278,8 +274,8 @@ Tipikus korlátok az alacsony kategóriás IoT eszközöknél:
 Ez utóbbi szempont különösen fontos. Egy 2024-ben telepített, 15 éves élettartamra tervezett
 ipari szenzor 2039-ig működik. Ha a 2030-as évekre valóban megjelennek kriptográfiailag releváns
 kvantumszámítógépek, ez az eszköz az aktív üzemeltetési ideje alatt válik sebezhető célponttá.
-Az ún.\ \textit{cryptographic agility} --- a kriptográfiai algoritmusok futás közbeni cserélhetőségének
-megőrzése a rendszerarchitektúrában --- ezért az IoT tervezés egyik alapkövetelményévé vált.
+Az ún.\ \textit{cryptographic agility} -- a kriptográfiai algoritmusok futás közbeni cserélhetőségének
+megőrzése a rendszerarchitektúrában -- ezért az IoT tervezés egyik alapkövetelményévé vált.
 
 \subsection{IoT biztonsági kihívások}
 
@@ -288,7 +284,7 @@ Mirai botnet-támadás megmutatta, hogy hétköznapi IoT eszközök (IP-kamerák
 jelszóval hagyott eszközei milyen pusztító erejű DDoS-támadáshoz nyújthatnak alapot: a
 botnet csúcsán másodpercenként 620~Gbps forgalmat generált, és az internetes infrastruktúra
 jelentős részét megbénította~\cite{mirai2016}. A 2021-es Oldsmar vízkezelő-üzemi incidens, ahol
-egy támadó a klórszint módosításával próbálkozott, jól illusztrálta az IIoT rendszerek fizikai
+egy támadó a klórszint módosításával próbálkozott, jól illusztrálta az IoT rendszerek fizikai
 következményekkel járó sebezhetőségét.
 
 A klasszikus kriptográfiai fenyegetéseken túl az IoT specifikus biztonsági kihívásai a következők:
@@ -302,22 +298,22 @@ ami egypontos sebezhetőséget teremt.
 üzemelnek, fizikai biztonságuk korlátozott. A fogyasztásmérés-alapú (Differential Power Analysis,
 DPA) és elektromágneses sugárzáson alapuló (Electromagnetic Analysis, EMA) elemzések titkok
 kinyerésére alkalmasak, hacsak az implementáció nem állandó idejű (constant-time) és nem alkalmaz
-megfelelő zajellenintézkedéseket.
+megfelelő zaj-ellenintézkedéseket.
 
 \textbf{Firmware-frissítések és cryptographic agility.} A hosszú üzemidő miatt az algoritmusváltásnak
 szoftverfrissítésen keresztül kell megvalósulnia. Ez előre megtervezett biztonságos bootloadereket,
 aláírt firmware-csomagokat és megbízható frissítési csatornákat feltételez. Ezek hiányában a
 deployed eszközök nem frissíthetők kvantum-ellenálló algoritmusokra.
 
-\textbf{Kulcskezelés és üzenetméret.} Az IoT rendszerek skálája --- sok milliós eszközpark ---
+\textbf{Kulcskezelés és üzenetméret.} Az IoT rendszerek skálája -- sok milliós eszközpark --
 egyedi kulcsmenedzsment kihívásokat vet fel. A PQC implementáció során figyelemmel kell lenni
 arra, hogy a rács alapú és kód alapú algoritmusok nyilvános kulcsai és kapszulái lényegesen
 nagyobbak, mint az RSA vagy ECC megfelelőik, ami ütközhet az eszközök korlátozott tárhelyével
-és a sávszélesség-korlátokkal.
+és a sávszélességkorlátokkal.
 
 
 %----------------------------------------------------------------------------
-\section{Posztkvantum-kriptográfia és IoT --- a kapcsolat}
+\section{Posztkvantum-kriptográfia és IoT -- a kapcsolat}
 %----------------------------------------------------------------------------
 
 A posztkvantum-kriptográfia azokat a kriptográfiai algoritmusokat foglalja magában, amelyek
@@ -335,19 +331,19 @@ A PQC főbb matematikai megközelítései:
           1978 óta ismert, de kulcsméretei igen nagyok.
     \item \textbf{Hash alapú kriptográfia:} kiforrottsága és konzervatív biztonsági
           feltevései miatt kisebb aláírási rendszerek esetén vonzó (SPHINCS+).
-    \item \textbf{Izogeníán alapuló kriptográfia:} a SIKE algoritmust 2022-ben klasszikus
+    \item \textbf{Izogénián alapuló kriptográfia:} a SIKE algoritmust 2022-ben klasszikus
           támadással feltörték, ami e kategória korlátjaira hívja fel a figyelmet.
 \end{itemize}
 
 Az IoT kontextusában a PQC bevezetése különleges kihívásokat jelent. A CRYSTALS-Kyber-512
-esetén a nyilvános kulcs 800 bájt, a kapszula 768 bájt, míg az RSA-2048 esetén ez 256 bájt ---
+esetén a nyilvános kulcs 800 bájt, a kapszula 768 bájt, míg az RSA-2048 esetén ez 256 bájt --
 a háromszoros méretbeli növekedés mind a sávszélességet, mind a flash-tárhelyt igénybe veszi.
 Az elterjedt TLS és DTLS protokollok üzenetméreteinek módosítására is szükség van.
 
 A számítási igény tekintetében kedvezőbb a kép: a CRYSTALS-Kyber és a BIKE ARM Cortex-M4
 processzorral néhány tíz--száz milliszekundum alatt elvégezhetők~\cite{CRYSTALS-KYBER, BIKE-SPEC},
-ami a legtöbb IoT alkalmazásban elfogadható. A \textbf{hibrid megközelítés} --- klasszikus és
-PQC kulcscsere párhuzamos alkalmazása --- a biztonsági migráció kockázatát is csökkenti: a
+ami a legtöbb IoT alkalmazásban elfogadható. A \textbf{hibrid megközelítés} -- klasszikus és
+PQC kulcscsere párhuzamos alkalmazása -- a biztonsági migráció kockázatát is csökkenti: a
 kommunikáció biztonságos marad mindaddig, amíg legalább az egyik algoritmus ellenáll
 a fenyegetésnek. Ez ma az iparági ajánlás a PQC fokozatos bevezetésekor.
 
@@ -357,7 +353,7 @@ frissíthetőség biztosítását és a kvantum-ellenálló kriptográfiára val
 Az IETF aktívan dolgozik a PQC-t integráló TLS és DTLS profilok kidolgozásán, különösen a
 CoAP és a 6LoWPAN kombinálásával működő IoT-profilok esetén~\cite{NIST-PQC}.
 
-Az összefonódó kihívások --- a kvantumfenyegetés, az IoT korlátok és a szabályozói nyomás ---
+Az összefonódó kihívások -- a kvantumfenyegetés, az IoT korlátok és a szabályozói nyomás --
 együttesen sürgetik a PQC algoritmusok erőforrás-tudatos implementációinak fejlesztését. E dolgozat
 éppen erre a hiányra ad választ: a CRYSTALS-Kyber és a BIKE algoritmusok IoT kontextusban való
 teljesítményének részletes mérésével és elemzésével.
@@ -367,17 +363,17 @@ teljesítményének részletes mérésével és elemzésével.
 \section{A dolgozat céljai és felépítése}
 %----------------------------------------------------------------------------
 
-A dolgozat fő kutatási kérdése: \textit{Hogyan alkalmazhatók a CRYSTALS-Kyber és BIKE
-posztkvantum-kriptográfiai algoritmusok erőforrás-korlátozott IoT eszközökön, és milyen
-teljesítménybeli különbségek mutatkoznak köztük valós mérési körülmények között?}
+A dolgozat fő kutatási kérdése: \textit{A CRYSTALS-Kyber és BIKE posztkvantum-kriptográfiai
+algoritmusok erőforrás-korlátozott IoT eszközökön való alkalmazhatóságának és egymáshoz
+viszonyított teljesítménybeli különbségeinek meghatározása szimulált mérési körülmények között.}
 
-E kérdés megválaszolásához a következő célokat tűztük ki:
+A kutatási célkitűzés megvalósításához a következő részfeladatokat tűztem ki:
 \begin{enumerate}
     \item A CRYSTALS-Kyber és a BIKE algoritmusok elméleti hátterének és matematikai
           alapjainak részletes ismertetése, különös tekintettel az IoT-szempontból
           releváns implementációs kihívásokra.
     \item Mérési környezet kialakítása, amely lehetővé teszi a két algoritmus
-          valós erőforrás-korlátozott eszközön való teljesítmény-összehasonlítását.
+          szimulált erőforrás-korlátozott eszközön való teljesítmény-összehasonlítását.
     \item A kulcsgenerálás, a kulcskapszulázás (encapsulation) és a visszafejtés
           (decapsulation) futási idejének, memóriaigényének és energiaszükségletének
           mérése és kiértékelése.
@@ -386,12 +382,3 @@ E kérdés megválaszolásához a következő célokat tűztük ki:
           biztonság és az erőforrásigény közötti kompromisszum szempontjából.
 \end{enumerate}
 
-A dolgozat felépítése a következő. A \textbf{2.\ fejezet} részletesen tárgyalja a
-posztkvantum-kriptográfiai protokollok matematikai alapjait, a CRYSTALS-Kyber és a BIKE
-algoritmusok működési mechanizmusát és biztonsági tulajdonságait. A \textbf{3.\ fejezet}
-bemutatja a mérési környezetet: az alkalmazott hardvert, szoftverkörnyezetet és a wolfSSL
-kriptográfiai könyvtár PQC-implementációját. A \textbf{4.\ fejezet} leírja a mérési
-módszertant, a mért paramétereket és a mérési eljárást. Az \textbf{5.\ fejezet} tartalmazza
-a mérési eredményeket és azok részletes kiértékelését táblázatos és grafikus formában.
-A \textbf{6.\ fejezet} összefoglalja a következtetéseket, és javaslatokat fogalmaz meg a
-PQC IoT rendszerekben való alkalmazásának jövőbeli irányait illetően.

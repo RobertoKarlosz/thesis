@@ -1,347 +1,207 @@
-\chapter{Mérés metodotógia}
+\chapter{Mérési metodológia}
 
-\section{Mosquitto alapú MQTT laboratóriumi környezet kialakítása posztkvantum kriptográfiai támogatással}
+Jelen fejezet leírja a kísérleti mérések tervezési elveit, a mért paramétereket, az alkalmazott
+mérési módszereket és a statisztikai kiértékelés módját. A célkitűzés egy olyan ismételhető,
+automatizált kísérletmátrix kialakítása volt, amely lehetővé teszi a nyolc vizsgált algoritmus --
+négy ML-KEM-variáns (ML-KEM-512, ML-KEM-768, ML-KEM-1024, illetve a hibrid X25519MLKEM768),
+három BIKE-variáns (BIKE-L1, BIKE-L3, BIKE-L5) és a klasszikus X25519 referencia --
+rendszerszintű összehasonlítását változó CPU-erőforrás-korlátok mellett.
 
-\subsection{Bevezetés}
+%----------------------------------------------------------------------------
+\section{A kísérlet tervezési elvei}
+%----------------------------------------------------------------------------
 
-Az Internet of Things (IoT) rendszerek terjedésével egyre nagyobb jelentősége van a könnyűsúlyú és megbízható kommunikációs protokolloknak. Az egyik legelterjedtebb ilyen protokoll az MQTT (Message Queuing Telemetry Transport), amelyet kifejezetten kis erőforrásigényű eszközök és instabil hálózati kapcsolatok számára terveztek. Az MQTT protokoll publish-subscribe kommunikációs modellt használ, amely lehetővé teszi, hogy az eszközök közvetlen kapcsolat nélkül, egy központi broker segítségével kommunikáljanak egymással.
+\subsection{Szimulált erőforrás-korlátok}
 
-Az MQTT széles körben alkalmazott technológia okosotthon rendszerekben, ipari automatizálásban, szenzorhálózatokban és edge computing környezetekben. Mivel az ilyen rendszerek gyakran érzékeny adatokat továbbítanak, kiemelt szerepe van a biztonságos kommunikációnak. Jelenleg a legtöbb TLS-alapú kommunikáció hagyományos nyilvános kulcsú algoritmusokra, például RSA-ra vagy elliptikus görbéken alapuló kriptográfiára épül. Ezeket a megoldásokat azonban a jövőben veszélyeztethetik a kvantumszámítógépek.
-
-A posztkvantum kriptográfia (Post-Quantum Cryptography -- PQC) olyan algoritmusok fejlesztésével foglalkozik, amelyek ellenállnak a kvantumszámítógépek támadásainak is. Az Amerikai Szabványügyi és Technológiai Intézet (NIST) több évig tartó standardizációs folyamat során választotta ki azokat az algoritmusokat, amelyek várhatóan a jövő kvantumbiztos rendszereinek alapját képezik majd. Ezek közé tartozik például az ML-KEM (korábban Kyber) és az ML-DSA (korábban Dilithium).
-
-A laboratóriumi környezet célja egy olyan MQTT infrastruktúra kialakítása volt, amelyben a kommunikáció TLS kapcsolaton keresztül, posztkvantum algoritmusok támogatásával valósul meg. A labor lehetővé teszi a PQC algoritmusok gyakorlati tesztelését, kompatibilitási vizsgálatát, valamint későbbi teljesítménymérések végrehajtását.
-
-\subsection{A labor célja és architektúrája}
-
-A labor célja egy reprodukálható, izolált MQTT tesztkörnyezet létrehozása volt, amely támogatja a posztkvantum kriptográfiai algoritmusok használatát TLS kapcsolatokban.
-
-A kialakított környezet fő komponensei:
+A dolgozat fő vizsgálati kérdése az, hogy a PQC algoritmusok milyen terhelést rónak az
+IoT-csomópontokra és a biztonsági proxykomponensekre erőforrás-szűkös körülmények között.
+Valódi heterogén hardverparkot összehasonlíthatóan mérni nehéz, ezért a labor Docker Engine
+CPU-kvótamechanizmusát alkalmazza: a \texttt{--cpus} paraméter meghatározza, hogy egy konténer
+az egész CPU-időszelet mekkora hányadát kaphatja meg. Az öt alkalmazott értéket az
+\texttt{scripts/run\_experiment.sh} szkript Passmark-benchmarkon alapuló platform-megfeleltetéssel
+rendeli valós IoT-eszközosztályokhoz:
 
 \begin{itemize}
-    \item Ubuntu Linux alapú rendszer
-    \item Docker alapú izoláció
-    \item Egyedi fordítású OpenSSL 3.3
-    \item Open Quantum Safe (OQS) projekt komponensei
-    \item Eclipse Mosquitto MQTT broker
-    \item TLS kommunikáció PQC algoritmusokkal
+    \item \textbf{0,026 mag} -- erősen korlátozott beágyazott eszköz, pl.\ ESP32
+          (Xtensa LX7, 240~MHz, $\approx$57 Passmark-pont).
+    \item \textbf{0,12 mag} -- belépő szintű Linux-alapú csomópont, pl.\ Raspberry Pi
+          Zero~2W (Cortex-A53, 1~GHz, $\approx$220 Passmark-pont).
+    \item \textbf{0,25 mag} -- közepes kategóriájú peremeszköz, pl.\ Raspberry Pi 3B+
+          (Cortex-A53, 1,4~GHz, $\approx$450 Passmark-pont).
+    \item \textbf{0,5 mag} -- erős peremeszköz, pl.\ Raspberry Pi 4B
+          (Cortex-A72, 1,5~GHz, $\approx$950 Passmark-pont).
+    \item \textbf{1,0 mag} -- referenciakonfiguráció; ipari IoT átjáró, közelítőleg
+          Intel Atom szintű teljesítmény.
 \end{itemize}
 
-A rendszer logikai felépítése a következő:
+\subsection{Kísérletmátrix és ismétlések}
 
+A teljes kísérletmátrixot a 8 algoritmus és 5 CPU-korlát kombinációja alkotja. Minden kombinációhoz \textbf{egy futtatás} tartozik, amelynek időtartama
+\textbf{300~másodperc}. Ez az időtartam elegendő ahhoz, hogy:
 \begin{enumerate}
-    \item MQTT kliens
-    \item TLS kapcsolat
-    \item OpenSSL könyvtár
-    \item OQS Provider
-    \item Mosquitto broker
+    \item az MQTT csomópontok stabil kapcsolatot létesítsenek,
+    \item a Prometheus legalább 30 adatpontot gyűjtsön (10~s intervallum),
+    \item az MQTT latencia-hisztogram statisztikailag értékelhető legyen
+          ($\approx 60$ üzenet csomópontonként, 5~s-es publish-intervallum mellett).
 \end{enumerate}
 
-A Docker alapú megközelítés biztosítja, hogy a labor könnyen újraépíthető és más rendszereken is reprodukálható legyen. Ez különösen fontos kutatási környezetben, ahol az eredmények reprodukálhatósága alapvető követelmény.
+%----------------------------------------------------------------------------
+\section{A mért paraméterek}
+%----------------------------------------------------------------------------
 
-\subsection{Operációs rendszer és alapcsomagok telepítése}
+\subsection{TLS kézfogás késleltetése}
 
-A labor Ubuntu 24.04 alapú Linux környezetben készült. Az Ubuntu választása több szempontból is előnyös:
+A \texttt{handshake\_latency\_ms} Prometheus gauge minden PQC proxy konténer indításakor
+kerül mérésre. A proxy entrypointja három egymást követő \texttt{openssl s\_client} hívást
+hajt végre a Mosquitto broker 8883-as portjára, a konfigurált PQC kulcscserecsoportot
+(\texttt{-groups \$PQC\_ALG}) és TLS~1.3-t (\texttt{-tls1\_3}) megadva. Az eltelt falióraidőt
+nanoszekundum-pontosságú \texttt{date +\%s\%N} hívásokkal méri, majd a három mérés
+számtani átlagát exportálja Prometheus-metrikaként. Mivel a mérés konténer-induláskor
+egyszer fut le, az itt kapott érték az algoritmus hideg (cold-start) TLS kézfogási
+késleltetését rögzíti.
+
+\subsection{MQTT publish-ciklus késleltetése}
+
+Az MQTT publish-ciklus késleltetése az IoT-csomópontban méri azt az időt, amely az
+\texttt{mqttclient.publish()} hívása és a hozzá tartozó \texttt{on\_publish} visszahívás
+aktiválása között telik el. Ez az idő magában foglalja:
+\begin{itemize}
+    \item a QoS~1 üzenet elküldetési és PUBACK fogadási ciklusát a kliens és a proxy között,
+    \item a proxy MQTT-forgalom stunnel-en keresztüli továbbítását,
+    \item az esetleges hálózati pufferhézagokat.
+\end{itemize}
+Az értékeket a \texttt{mqtt\_publish\_latency\_ms} Prometheus hisztogram tárolja, amelynek
+vödörhatárai: 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 15000, 30000~ms.
+A felső határok (15\,000 és 30\,000~ms) szándékosan illeszkednek a PUBACK-reaper
+timeout-jához (ld.\ \ref{subsec:puback-tracking}.\ pont), hogy a sikertelen
+kézbesítések is megjelenjenek a hisztogramban. A kiértékelés során a $p_{50}$, $p_{95}$
+és $p_{99}$ percentiliseket használom, amelyeket a \texttt{histogram\_quantile()}
+PromQL-függvénnyel számítom az adott futtatás teljes időablakára.
+
+\subsection{Üzenetátviteli sebesség}
+
+Az \texttt{mqtt\_messages\_total} számláló rögzíti az MQTT-csomópont által elindított
+\texttt{publish()} hívások számát. Az üzenetküldési sebesség (msg/s) a futtatási ablakra
+vetített ráta, amelyet a Prometheus \texttt{rate()} függvényével számítom. Az elvárt
+érték 5~s-es intervallumnál $0{,}2$~\text{msg/s}; az ettől való eltérés megbízhatatlan
+kapcsolatra vagy MQTT újracsatlakozásokra utal.
+
+\subsection{PUBACK-visszaigazolás és időtúllépés-nyomon követés}
+\label{subsec:puback-tracking}
+
+A QoS~1 MQTT kézbesítési megbízhatóságának mérésére az IoT-csomópont három számlálót
+vezet:
 
 \begin{itemize}
-    \item széles körű dokumentációval rendelkezik,
-    \item stabil fejlesztői környezetet biztosít,
-    \item jól támogatja a Docker és OpenSSL build folyamatokat,
-    \item kompatibilis az Open Quantum Safe projekt komponenseivel.
+    \item \textbf{\texttt{mqtt\_publish\_acked\_total}} -- az \texttt{on\_publish}
+          visszahívásban sikeresen megérkezett PUBACK-visszaigazolások száma.
+    \item \textbf{\texttt{mqtt\_publish\_timeout\_total}} -- azok a küldések, amelyekhez
+          30~másodpercen belül (\texttt{PENDING\_TIMEOUT\_S=30}) nem érkezett PUBACK.
+    \item \textbf{\texttt{mqtt\_reconnect\_total}} -- a broker felőli
+          megszakítások száma, amelyek újracsatlakozást váltanak ki.
 \end{itemize}
 
-A telepítést követően első lépésként a rendszer frissítése szükséges. Ez biztosítja, hogy minden csomag naprakész legyen, valamint csökkenti a kompatibilitási problémák kockázatát.
+A PUBACK-reaper egy háttérszál, amely 5~másodpercenként ellenőrzi a függőben lévő
+publikálások listáját. Ha egy \texttt{mid} bejegyzés 30~s-nél régebbi, a tényleges
+eltelt idő bekerül a \texttt{mqtt\_publish\_latency\_ms} hisztogramba, és a
+\texttt{mqtt\_publish\_timeout\_total} számláló növekszik. Ez a mechanizmus
+különösen fontos a BIKE kísérletekben: stunnel-kapcsolati hiba esetén a QoS~1
+PUBACK-ok nem érkeznek meg, és a reaper nélkül az üzenetek csendben eltűnnének a
+hisztogramból -- az instabilitás láthatatlan maradna. Az ACK-arány
+($\text{ack\_ratio} = \texttt{mqtt\_publish\_acked\_total} /
+\texttt{mqtt\_messages\_total}$) az algoritmus kézbesítési megbízhatóságának
+összefoglaló mutatója.
 
-\begin{verbatim}
-sudo apt update
-sudo apt upgrade -y
-\end{verbatim}
+\subsection{Folyamatszintű memóriafoglalás}
 
-A build folyamatokhoz és a fejlesztői környezet kialakításához több csomag telepítése szükséges.
+A \texttt{node\_memory\_rss\_bytes} gauge az IoT-csomópont Python-folyamatának pillanatnyi
+RSS (Resident Set Size) memóriahasználatát rögzíti, amelyet a \texttt{psutil.memory\_info().rss}
+hívás ad vissza. Az átlagos RSS-t az \texttt{avg\_over\_time()} PromQL-aggregátorral
+számítom a futtatási ablakra. Ez a metrika jelzi, hogy a PQC-könyvtár betöltése
+és a folyamatos MQTT-forgalom milyen statikus memóriaterhelést jelent.
 
-\begin{verbatim}
-sudo apt install -y \
-build-essential \
-cmake \
-git \
-ninja-build \
-perl \
-python3 \
-python3-pip \
-libtool \
-autoconf \
-automake
-\end{verbatim}
+\subsection{Processzorkihasználtság}
 
-A \texttt{build-essential} csomag biztosítja a GCC fordítót és az alapvető fejlesztői eszközöket. A \texttt{cmake} modern build rendszert biztosít, míg a \texttt{ninja-build} gyorsabb fordítást tesz lehetővé. Az OpenSSL build folyamata Perl scriptet használ, ezért a \texttt{perl} csomag szintén szükséges.
+A \texttt{node\_cpu\_usage\_percent} gauge a \texttt{psutil.cpu\_percent(interval=None)}
+hívást alkalmazza, amely a legutóbbi mérés óta eltelt CPU-időt adja vissza százalékban.
+Megjegyzendő, hogy az első hívás után \texttt{interval=None} használatakor a psutil
+az előző \texttt{cpu\_percent()} hívás óta mért kumulatív értéket ad. Ha az inicializáló
+hívás és a tényleges mérési hívás között nagyon rövid az idő, a visszaadott érték nulla
+lehet. Ez az ismert mérési korlát az eredmények értelmezésekor figyelembe veendő.
 
-\subsection{Docker környezet kialakítása}
+%----------------------------------------------------------------------------
+\section{Adatgyűjtési és futtatási eljárás}
+%----------------------------------------------------------------------------
 
-A Docker egy konténerizációs platform, amely lehetővé teszi izolált futtatási környezetek létrehozását. A laborban a Docker használata több okból is indokolt:
+\subsection{Automatizált kísérletfuttatás}
+
+A kísérletmátrix futtatását a \texttt{scripts/run\_experiment.sh} szkript vezérli.
+A szkript algoritmuson és CPU-limiten végigiterálva minden kombinációra elvégzi a
+következő lépéseket:
+
+\begin{enumerate}
+    \item \textbf{Tanúsítványgenerálás:} a \texttt{scripts/generate\_certs.sh} friss
+          ECDSA~P-256 CA- és szerver-tanúsítványt állít elő a \texttt{certs/} könyvtárba.
+          Ez minden futtatás előtt lefut, biztosítva, hogy a tanúsítványok nem járnak le
+          és nem szennyezik egymást.
+    \item \textbf{Konténerek újraindítása:} \texttt{docker compose up -d --force-recreate}
+          paranccsal minden konténer friss állapotból indul, a \texttt{PQC\_ALG},
+          \texttt{NODE\_CPUS} és \texttt{PROXY\_CPUS} értékekkel felülírva.
+    \item \textbf{Várakozás:} 300~másodperc telik el, amely alatt a Prometheus adatokat
+          gyűjt, az IoT-csomópontok MQTT üzeneteket küldenek.
+    \item \textbf{Prometheus TSDB-pillanatkép:} a \texttt{/api/v1/admin/tsdb/snapshot}
+          végpont meghívásával a Prometheus idősoradatai snapshotba kerülnek, biztosítva
+          az offline utólagos elemzhetőséget.
+    \item \textbf{Metaadatok mentése:} algoritmus, CPU-korlát, időtartam és a snapshot
+          azonosítója JSON-fájlba kerül (\texttt{experiment-results/\$RUN\_ID.json}).
+\end{enumerate}
+
+\subsection{Metrikák offline exportálása}
+
+A mérések befejeztével a \texttt{scripts/export\_metrics.py} szkript az egyes futtatások
+Prometheus-snapshotjait lekérdezi a Prometheus HTTP API-n keresztül, és aggregált
+eredménytáblázatot készít. A lekérdezések a futtatás teljes időablakára vonatkoznak,
+és a három IoT-csomópontra (\texttt{temperature-sensor-1}, \texttt{temperature-sensor-2},
+\texttt{temperature-sensor-3}) elkülönítetten közlik a percentiliseket, az ACK-arányt,
+a timeout- és újracsatlakozás-számokat, az RSS-memóriát és az üzenetküldési rátát.
+Az összesített exportfájl (\texttt{experiment-results/metrics\_export.txt}) az
+eredmények fejezetének elsődleges adatforrása.
+
+\subsection{Statisztikai módszer}
+
+A teljes kísérletmátrix 8 algoritmus $\times$ 5 CPU-szint = 40 konfigurációt tartalmaz.
+Minden (algoritmus, CPU-korlát) párhoz egy 300~s-os futtatás tartozik, amelyben három
+IoT-csomópont párhuzamosan üzemel, így kombinációnként három megfigyelés áll
+rendelkezésre. A mérés táblázataiban az átlag a három csomópont értékeinek számtani
+közepe. Ahol a csomópontok közötti szórás a középértékhez képest nagy
+(pl.\ $p_{99}$ értékeknél alacsony CPU-korlát esetén), ott ezt külön jelzem.
+
+%----------------------------------------------------------------------------
+\section{A mérési megközelítés korlátai}
+%----------------------------------------------------------------------------
+
+A kialakított módszertan több szempontból is eltér egy ideális hardveres IoT mérési
+összeállítástól:
 
 \begin{itemize}
-    \item elkülöníti a PQC OpenSSL buildet a hoszt rendszertől,
-    \item egyszerűsíti a függőségek kezelését,
-    \item biztosítja a reprodukálható környezetet,
-    \item lehetővé teszi a labor gyors újraépítését.
+    \item \textbf{Emulált erőforráskorlát:} a Docker CPU-kvóta a Linux CFS ütemező
+          időszelet-korlátján alapul, nem tényleges órajel-csökkentésen. A valódi
+          Cortex-M4 más gyorsítótár-hierarchiával, más memória-sávszélességgel rendelkezik és
+          nincs AVX2/AES-NI utasításkészlete, ami az abszolút futási idők tekintetében
+          eltérést okozhat.
+    \item \textbf{Hideg kézfogásmérés:} a \texttt{handshake\_latency\_ms} a proxy
+          indításakor kerül mérésre, nem steady-state forgalom közben. A valódi
+          IoT rendszerekben az újracsatlakozások és a session-resumption (TLS session
+          ticket) eltérő képet adna.
+    \item \textbf{CPU-kihasználtság mérési artefaktum:} a \texttt{psutil}
+          \texttt{cpu\_percent(interval=None)} hívás első meghívásakor nulla értéket
+          adhat vissza, ezért a CPU-adatok a mérési ciklus egészére nem megbízhatóak.
+          Ez az értékelés során figyelembe kell venni.
+    \item \textbf{Hálózati latencia:} a mérések Docker belső bridge hálózaton zajlanak,
+          amely sub-milliszekundumos késleltetéssel rendelkezik. Valódi IoT hálózatokban
+          (LoRaWAN, NB-IoT, Wi-Fi) a hálózati késleltetés dominálhat, elfedve az
+          algoritmusok közötti különbségeket.
 \end{itemize}
 
-A Docker telepítése:
-
-\begin{verbatim}
-sudo apt install -y docker.io docker-compose
-\end{verbatim}
-
-A Docker szolgáltatás automatikus indítása:
-
-\begin{verbatim}
-sudo systemctl enable docker
-sudo systemctl start docker
-\end{verbatim}
-
-A felhasználó hozzáadása a Docker csoporthoz:
-
-\begin{verbatim}
-sudo usermod -aG docker $USER
-\end{verbatim}
-
-Ezután új bejelentkezés szükséges, hogy a jogosultságok érvénybe lépjenek.
-
-\subsection{Az Open Quantum Safe projekt komponensei}
-
-A labor egyik legfontosabb eleme az Open Quantum Safe projekt használata. Az OQS projekt célja a posztkvantum algoritmusok integrálása valós rendszerekbe és protokollokba.
-
-A laborban két fő komponens került felhasználásra:
-
-\begin{itemize}
-    \item liboqs
-    \item oqs-provider
-\end{itemize}
-
-A \texttt{liboqs} könyvtár implementálja a különböző PQC algoritmusokat. Ide tartoznak például az ML-KEM, HQC, BIKE és más NIST standardizáció alatt álló algoritmusok.
-
-Az \texttt{oqs-provider} az OpenSSL 3 Provider architektúráját használva tölti be ezeket az algoritmusokat az OpenSSL környezetbe. A Provider architektúra az OpenSSL 3 egyik legfontosabb újítása, amely lehetővé teszi külső kriptográfiai modulok dinamikus integrációját.
-
-\subsection{liboqs fordítása és telepítése}
-
-Első lépésként a liboqs forráskódját kell letölteni.
-
-\begin{verbatim}
-git clone --branch main https://github.com/open-quantum-safe/liboqs.git
-cd liboqs
-\end{verbatim}
-
-Ezután build könyvtár készül:
-
-\begin{verbatim}
-mkdir build
-cd build
-\end{verbatim}
-
-A projekt fordítása CMake és Ninja használatával történik.
-
-\begin{verbatim}
-cmake -GNinja ..
-ninja
-\end{verbatim}
-
-Telepítés:
-
-\begin{verbatim}
-sudo ninja install
-sudo ldconfig
-\end{verbatim}
-
-Az \texttt{ldconfig} parancs frissíti a dinamikus linker cache-t, így a rendszer felismeri az újonnan telepített library-kat.
-
-\subsection{OpenSSL 3.3 fordítása}
-
-A legtöbb Linux disztribúció saját OpenSSL verziót biztosít, azonban ezek általában nem kompatibilisek teljes mértékben az oqs-provider legfrissebb verzióival. Emiatt szükséges egy külön OpenSSL build létrehozása.
-
-A forráskód letöltése:
-
-\begin{verbatim}
-git clone https://github.com/openssl/openssl.git
-cd openssl
-git checkout openssl-3.3
-\end{verbatim}
-
-A konfiguráció során külön telepítési útvonal került megadásra.
-
-\begin{verbatim}
-./Configure \
---prefix=/opt/openssl-pqc \
-linux-x86_64
-\end{verbatim}
-
-A \texttt{--prefix} paraméter célja, hogy az új OpenSSL verzió ne írja felül a rendszer alapértelmezett könyvtárait.
-
-Fordítás:
-
-\begin{verbatim}
-make -j$(nproc)
-\end{verbatim}
-
-Telepítés:
-
-\begin{verbatim}
-sudo make install
-\end{verbatim}
-
-\subsection{OQS Provider fordítása}
-
-Az oqs-provider biztosítja a kapcsolatot az OpenSSL és a liboqs között.
-
-\begin{verbatim}
-git clone https://github.com/open-quantum-safe/oqs-provider.git
-cd oqs-provider
-\end{verbatim}
-
-Fordítás:
-
-\begin{verbatim}
-cmake -DOPENSSL_ROOT_DIR=/opt/openssl-pqc .
-make
-\end{verbatim}
-
-Telepítés:
-
-\begin{verbatim}
-sudo make install
-\end{verbatim}
-
-\subsection{Környezeti változók konfigurálása}
-
-\begin{verbatim}
-export PATH=/opt/openssl-pqc/bin:$PATH
-export LD_LIBRARY_PATH=/opt/openssl-pqc/lib64:$LD_LIBRARY_PATH
-export OPENSSL_MODULES=/opt/openssl-pqc/lib64/ossl-modules
-\end{verbatim}
-
-A labor során gyakori probléma volt a következő hiba:
-
-\begin{verbatim}
-error while loading shared libraries: libssl.so.4
-\end{verbatim}
-
-Ez azt jelenti, hogy a dinamikus linker nem találta az új OpenSSL library fájlokat.
-
-\subsection{Az OpenSSL működésének ellenőrzése}
-
-\begin{verbatim}
-openssl version -a
-\end{verbatim}
-
-Provider modulok listázása:
-
-\begin{verbatim}
-openssl list -providers
-\end{verbatim}
-
-PQC algoritmusok listázása:
-
-\begin{verbatim}
-openssl list -kem-algorithms
-\end{verbatim}
-
-\subsection{Mosquitto MQTT broker telepítése}
-
-A labor MQTT broker komponense az Eclipse Mosquitto lett. A Mosquitto egy könnyűsúlyú, nyílt forráskódú MQTT broker, amely széles körben elterjedt IoT környezetekben.
-
-\begin{verbatim}
-sudo apt install -y mosquitto mosquitto-clients
-\end{verbatim}
-
-\subsection{TLS tanúsítványok létrehozása}
-
-CA tanúsítvány létrehozása:
-
-\begin{verbatim}
-openssl req -x509 -new -nodes \
--keyout ca.key \
--out ca.crt \
--days 365
-\end{verbatim}
-
-Szerverkulcs generálása:
-
-\begin{verbatim}
-openssl genrsa -out server.key 2048
-\end{verbatim}
-
-CSR létrehozása:
-
-\begin{verbatim}
-openssl req -new \
--key server.key \
--out server.csr
-\end{verbatim}
-
-Tanúsítvány aláírása:
-
-\begin{verbatim}
-openssl x509 -req \
--in server.csr \
--CA ca.crt \
--CAkey ca.key \
--CAcreateserial \
--out server.crt \
--days 365
-\end{verbatim}
-
-\subsection{Mosquitto TLS konfiguráció}
-
-\begin{verbatim}
-listener 8883
-
-cafile /etc/mosquitto/certs/ca.crt
-certfile /etc/mosquitto/certs/server.crt
-keyfile /etc/mosquitto/certs/server.key
-
-require_certificate false
-\end{verbatim}
-
-\subsection{A broker indítása és tesztelése}
-
-\begin{verbatim}
-sudo systemctl restart mosquitto
-sudo systemctl status mosquitto
-\end{verbatim}
-
-TLS kapcsolat tesztelése:
-
-\begin{verbatim}
-openssl s_client \
--provider default \
--provider oqsprovider \
--connect localhost:8883
-\end{verbatim}
-
-\subsection{MQTT kommunikáció ellenőrzése}
-
-Subscriber indítása:
-
-\begin{verbatim}
-mosquitto_sub \
--h localhost \
--p 8883 \
---cafile ca.crt \
--t test/topic
-\end{verbatim}
-
-Publisher indítása:
-
-\begin{verbatim}
-mosquitto_pub \
--h localhost \
--p 8883 \
---cafile ca.crt \
--t test/topic \
--m "Hello PQC"
-\end{verbatim}
-
-\subsection{Összegzés}
-
-A kialakított labor sikeresen demonstrálja, hogy az MQTT alapú IoT kommunikáció integrálható posztkvantum kriptográfiai algoritmusokkal. Az OpenSSL 3 Provider architektúrája és az Open Quantum Safe projekt lehetővé teszi modern PQC algoritmusok TLS környezetben történő használatát.
-
-A labor előnye, hogy reprodukálható, izolált és könnyen bővíthető. A rendszer megfelelő alapot biztosít további kutatásokhoz, például TLS handshake mérésekhez, hálózati teljesítményvizsgálatokhoz vagy IoT környezetekben végzett kompatibilitási tesztekhez.
+Ezek a korlátok az eredmények értelmezésekor és a javaslatok fejezetben figyelembe
+kerülnek.

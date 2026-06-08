@@ -1,47 +1,148 @@
 \chapter{Összefoglalás és javaslatok}
 
-Jelen fejezet összefoglalja a dolgozat főbb eredményeit, levon következtetéseket a
+Jelen fejezet összefoglalja a dolgozat főbb eredményeit, következtetéseket von le a
 posztkvantum-kriptográfiai algoritmusok IoT alkalmazhatóságáról, és javaslatokat
-fogalmaz meg mind a gyakorlati bevezetés, mind a jövőbeli kutatások irányára vonatkozóan.
+fogalmaz meg a gyakorlati bevezetésre, valamint a jövőbeli kutatások irányaira vonatkozóan.
 
 %----------------------------------------------------------------------------
 \section{A dolgozat eredményeinek összefoglalása}
 %----------------------------------------------------------------------------
 
-% TODO: A CRYSTALS-Kyber és BIKE algoritmusok működésének, matematikai alapjainak
-% és biztonsági feltevéseinek összefoglalása; mi az, amit a dolgozat hozzátesz
-% a meglévő irodalomhoz.
+A dolgozat az ML-KEM-768 (CRYSTALS-Kyber-768) és a BIKE-L1 posztkvantum kulcskapszulázó
+algoritmusok rendszerszintű vizsgálatát végezte el egy Docker Compose alapú IoT-laborban,
+amelyben a PQC-TLS terminálást stunnel sidecar proxykon keresztül, az MQTT kommunikációt
+Eclipse Mosquitto brokeren keresztül valósítottam meg. A kísérletmátrix 8 algoritmust, 5
+CPU-korlátszintet és 1 futtatást kombinált, összesen 40 konfigurációban.
 
-% TODO: A legfontosabb mérési számok egy bekezdésben (pl. „A Kyber-512 encapsulation
-% X ms alatt futott le, ami Y-szor gyorsabb, mint a BIKE-L1 megfelelője...").
+Az elméleti fejezetekben bemutattam, hogy az ML-KEM (modul-LWE alapú) és a BIKE (QC-MDPC
+kód alapú) algoritmusok hogyan biztosítanak kvantumszámítógép-ellenálló kulcscserét. Az
+ML-KEM~2024-ben FIPS~203-ként szabványosított, biztonsági szintje NIST~II.\ (AES-192-ekvivalens),
+míg a BIKE NIST~I.\ szintű jelölt, amelynek szabványosítása folyamatban van.
+
+A kísérleti mérések legfontosabb számai:
+\begin{itemize}
+    \item Az ML-KEM-768 MQTT $p_{50}$ publish-ciklus késleltetése $\approx 1{,}5$~ms --
+          azonos az X25519 klasszikus referenciával; ez az érték legalább 0,25~mag CPU-korlát
+          mellett nem változik.
+    \item Az ML-KEM-768 és X25519 átlagos $p_{99}$ értékei: 134,00~ms vs.\ 130,25~ms; a
+          különbség a 0,026~magos (ESP32 szintű) futtatások ritka, nagy késleltetésű
+          újracsatlakozási eseményeire vezethető vissza, nem az algoritmus inherens overhead-jére.
+    \item A BIKE-L1 futtatásaiban a QoS~1 PUBACK-visszaigazolások teljesen elmaradtak
+          (\texttt{ack\_ratio}: --), az üzenetküldési ráta $\approx 20$--$47$\%-kal alacsonyabb
+          volt az elvártnál, és a MQTT latencia-hisztogram kizárólag 30\,000~ms-os
+          időtúllépési értékeket rögzített minden CPU-korlát esetén -- jelezve,
+          hogy a BIKE-L1 TLS kézfogás a stunnel proxy időtúllépési korlátaival ütközött.
+    \item Az IoT-csomópont RSS-memóriája $\approx 32$~MB, algoritmustól és CPU-korlától
+          függetlenül, a sidecar proxy-architektúrának köszönhetően.
+\end{itemize}
 
 %----------------------------------------------------------------------------
 \section{Javaslatok IoT rendszerek PQC migrációjához}
 %----------------------------------------------------------------------------
 
-% TODO: Mikor válasszuk a Kybert, mikor a BIKE-ot — döntési szempontok (sebesség,
-% kulcsméret, energiaigény, szabványosítási státusz).
+\subsection{Algoritmusválasztás: ML-KEM-768 az ajánlott alapértelmezés}
 
-% TODO: Klasszikus + PQC KEM kombináció ajánlása az átmeneti időszakra;
-% hogyan valósítható meg wolfSSL-lel / OpenSSL-OQS-sel.
+Az elvégzett mérések és a biztonsági szempont egyaránt az ML-KEM-768 alkalmazása mellett
+szólnak IoT MQTT kommunikáció TLS kulcscseréjéhez. Az algoritmus FIPS~203 szabványosítása
+garantálja a hosszú távú megfelelőséget az USA és az EU szabályozói elvárásainak
+(NIS2-irányelv, Cyber Resilience Act); az Európai Hálózat- és Információbiztonsági Ügynökség
+(ENISA) szintén az ML-KEM-et sorolja a kiemelt javasolt PQC algoritmusok közé. A BIKE
+alkalmazása mérési stabilitásának igazolásáig (időtúllépési paraméterek hangolása,
+hardveres gyorsítás) nem ajánlott éles IoT rendszerekben.
 
-% TODO: Hogyan tervezzük meg az IoT firmware-t, hogy az algoritmusok cserélhetők
-% legyenek (pl. absztrakciós réteg, szekvenciális frissítési stratégia).
+\subsection{Hibrid KEM az átmeneti időszakra}
 
-% TODO: DTLS 1.3 + CoAP használata MQTT helyett erősen korlátozott eszközökön;
-% tanúsítványlánc-méret optimalizálása; brókeroldali gyorsítás lehetőségei.
+Az átmeneti időszakban -- amíg a kvantumszámítógépek kriptográfiai szintre nem érnek --
+az iparági ajánlás a hibrid kulcscsere alkalmazása: a TLS~1.3 kézfogásban egyidejűleg
+zajlik egy klasszikus (X25519 vagy P-256) és egy PQC (ML-KEM-768) kulcscsere, és a
+munkamenetkulcs mindkettő kombinálásával jön létre. Ezt az IETF
+\texttt{X25519MLKEM768} TLS~1.3 csoport azonosítóval specifikálja, amelyet az
+\texttt{oqs-provider} is tartalmaz. Hibrid módban a biztonság akkor is megmarad, ha
+valamelyik algoritmus kompromittálódik. Ez csökkenti a migrációs kockázatot.
+
+Az oqs-provider konfigurációs fájlban a hibrid módra való váltás egyetlen sorral
+megoldható:
+\begin{verbatim}
+Groups = X25519MLKEM768:mlkem768:x25519
+\end{verbatim}
+Ez a sorrend biztosítja, hogy TLS~1.3-kompatibilis kliensek esetén a hibrid csoport legyen
+az előnyben részesített, de a tiszta ML-KEM-768 és a klasszikus X25519 visszaesési opcióként
+is rendelkezésre álljon.
+
+\subsection{Cryptographic agility a firmware-tervezésben}
+
+A labor architektúrájában jól megvalósított \emph{cryptographic agility} minta -- az
+algoritmus konfigurációból olvasható, image-újraépítés nélkül cserélhető -- IoT
+firmware-szinten is alkalmazandó. A javasolt megközelítés:
+\begin{enumerate}
+    \item Az algoritmusválasztó paraméter kerüljön dedikált, aláírt konfigurációs
+          szegmensbe (pl.\ NVM partition), amelyet a bootloader OTA-frissítéssel tud
+          frissíteni.
+    \item A kriptográfiai stack absztrakciós rétegen (pl.\ PSA Crypto API, wolfSSL
+          kriptográfiai backend) keresztül érhető el; a konkrét implementáció az
+          absztrakciós réteg mögé rejtett.
+    \item Az eszközpark firmware-frissítési csatornája maga is PQC-aláírással (pl.\
+          ML-DSA / CRYSTALS-Dilithium) hitelesített, biztosítva, hogy a frissítési
+          infrastruktúra nem válik a kvantumtámadás belépési pontjává.
+\end{enumerate}
+
+\subsection{MQTT protokoll-szintű megfontolások}
+
+Az ML-KEM-768 kulcs- és kapszulamérete (összesen $\approx 2{,}3$~kB) a TLS kézfogás
+üzeneteit méretben növeli. Erősen korlátozott sávszélességű protokollokhoz (LoRaWAN,
+NB-IoT) a következő stratégiák alkalmazhatók:
+\begin{itemize}
+    \item \textbf{TLS session resumption:} a kézfogás csak az első csatlakozáskor teljes;
+          az újracsatlakozás session ticket alapján sokkal rövidebb. Ez különösen fontos
+          elem- vagy napenergiával üzemelő eszközök esetén.
+    \item \textbf{DTLS~1.3 + CoAP:} nagyon alacsony MTU-jú hálózatokhoz (LoRaWAN:
+          250~B payload) a DTLS~1.3-ban foglalt record-szintű fragmentáció vagy a
+          DTLS Connection ID mechanizmusa (RFC~9146) csökkenti a fejlécoverhead-et.
+    \item \textbf{Broker-oldali gyorsítás:} a TLS kézfogás erőforrás-igényes részét
+          az MQTT broker előtt elhelyezett dedikált TLS-terminátor (pl.\ HAProxy,
+          nginx stream modul) vagy hardware security module (HSM) veheti át a broker
+          terheiből.
+\end{itemize}
 
 %----------------------------------------------------------------------------
 \section{Jövőbeli kutatási irányok}
 %----------------------------------------------------------------------------
 
-% TODO: Mérések valódi Cortex-M0/M3 eszközön; ARM TrustZone / HSM integrációja.
+\subsection{Valódi ARM-hardveren végzett mérések}
 
-% TODO: Valódi LoRaWAN vagy NB-IoT hálózati réteg bevonása; e2e késleltetés és
-% csomagveszteség hatása PQC kézfogásokra.
+A kísérletek x86-64 alapon, Docker CPU-kvótával emulált korlátok mellett zajlottak. A
+következő lépés a mérések megismétlése valódi ARM-alapú eszközökön:
+\begin{itemize}
+    \item \textbf{Raspberry Pi 4B} (ARM Cortex-A72, 1,5~GHz): IoT átjáró-szintű platform,
+          ahol a NEON SIMD utasítások a liboqs implementációit gyorsítják.
+    \item \textbf{ARM Cortex-M4F} (pl.\ STM32F4): valódi mikrovezérlő, ahol a PQC
+          algoritmusokat wolfSSL vagy \texttt{pqm4} könyvtárak implementálják; ezen a
+          szinten a memória- és energiakorlátok a legkritikusabbak.
+\end{itemize}
+Az ARM-mérések különösen fontosak a BIKE-L1 esetén: az arm-asm optimalizált bit-flipping
+dekóder az x86-architektúrán tapasztalt instabilitást csökkentheti.
 
-% TODO: CRYSTALS-Dilithium alapú tanúsítványlánc vizsgálata IoT eszközökön;
-% OCSP / CRL alternatívák kis sávszélességű csatornákhoz.
+\subsection{Energiafogyasztás mérése}
 
-% TODO: Hardveres NTT-gyorsítás (pl. FPGA implementáció), alvó mód és
-% ritka kulcscsere kombinálása az energiafogyasztás csökkentésére.
+Elemről működő IoT eszközöknél az energiafogyasztás kritikus tényező. A javasolt
+mérési összeállítás: INA219 I$^2$C áramszenzor az eszköz tápegysége előtt, amelyet
+egy Raspberry Pi~4 vezérel és naplóz. A kézfogás alatti energiaspike összemérendő a
+steady-state MQTT forgalom fogyasztásával. Ez lehetővé teszi a $\text{mJ/kézfogás}$
+és $\text{mJ/üzenet}$ metrikák meghatározását.
+
+\subsection{PQC-aláírás az IoT tanúsítványláncban}
+
+A jelen labor ECDSA~P-256-ot alkalmaz tanúsítványaláíráshoz. A következő lépés az
+ML-DSA (CRYSTALS-Dilithium, FIPS~204) alapú tanúsítványlánc vizsgálata. Az ML-DSA
+aláírások ($\approx 2\,420$~B méretű aláírás, $\approx 1\,312$~B nyilvános kulcs
+ML-DSA-65 esetén) a tanúsítványlánc-cserét tovább növelik, amit erőforrás-korlátozott
+eszközökön mérni szükséges.
+
+\subsection{Hardveres NTT-gyorsítás és alvó módú optimalizálás}
+
+Az ML-KEM alapjában álló NTT (Number Theoretic Transform) polinomszorzást FPGA-alapon
+vagy dedikált kriptográfiai koproceszoron (ARM CryptoCell-312, RISC-V kriptográfiai
+kiterjesztés) célszerű megvalósítani, különösen a nagyszámú TLS munkamenet-indítást
+igénylő határesetekben. Ezzel párhuzamosan vizsgálandó az alvó módból ébredő eszközök
+ritka kulcscsere-stratégiája: ha az eszköz naponta egyszer szinkronizál, a PQC kézfogás
+energiaköltsége elenyésző az MQTT üzenetküldés összfogyasztásához képest.

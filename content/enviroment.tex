@@ -11,18 +11,213 @@ topológiát.
 
 \subsection{Tesztplatform specifikációja}
 
-% TODO: A mérésekhez használt eszköz(ök) pontos leírása (pl. Raspberry Pi 4B, ARM Cortex-M4
-% alapú mikrovezérlő, x86 referenciagép stb.) — processzor, órajel, RAM, flash mérete.
+A mérések x86-64 architektúrájú asztali számítógépen futottak, Ubuntu 24.04~LTS operációs
+rendszer alatt. A konténerizált környezet lehetővé tette, hogy az egyes IoT-csomópontok és
+proxykomponensek erőforrásigényét a Docker Engine CPU-kvótamechanizmusán keresztül
+szoftveresen korlátozzam, így a fizikailag rendelkezésre álló teljesítmény helyett a korlátozott
+erőforrás-konfiguráció hatása kerülhetett mérés középpontjába. Ez a megközelítés jól modellezi
+azokat az ipari és beágyazott IoT szcenáriókat, amelyekben az eszközök számítási teljesítménye
+korlátozott.
 
 \subsection{Hálózati topológia}
 
-% TODO: A mérési elrendezés topológiájának leírása (kliens–broker–szerver kapcsolat,
-% hálózati interfész típusa, lokális vs. konténeres kommunikáció).
+A labor hálózati rétege Docker bridge hálózatokból épül fel, amelyek izolált kommunikációs
+szegmenseket hoznak létre az egyes eszközcsoportok között. Az alkalmazott topológia a következő
+öt hálózatot tartalmazza:
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    box/.style   = {draw, rounded corners=3pt, minimum width=2.9cm,
+                    minimum height=0.82cm, align=center, font=\small\ttfamily},
+    iotbox/.style    = {box, fill=blue!10,   draw=blue!45!black},
+    proxybox/.style  = {box, fill=orange!16, draw=orange!55!black},
+    brokerbox/.style = {box, fill=green!14,  draw=green!45!black},
+    obsbox/.style    = {box, fill=violet!10, draw=violet!45!black},
+    netlabel/.style  = {font=\fontsize{7}{8}\selectfont\sffamily},
+    arr/.style       = {->, >=latex, thick},
+    sarr/.style      = {->, >=latex, dashed, thin, gray!70},
+]
+
+%% ── Csomópontok ───────────────────────────────────────────────────────
+\node[iotbox]    (nA) at (0,   6.0) {temperature-\\sensor-1\\{\fontsize{7}{8}\selectfont :9110 (metrics)}};
+\node[iotbox]    (nB) at (0,   3.5) {temperature-\\sensor-2\\{\fontsize{7}{8}\selectfont :9111 (metrics)}};
+\node[iotbox]    (nC) at (0,   1.0) {temperature-\\sensor-3\\{\fontsize{7}{8}\selectfont :9112 (metrics)}};
+
+\node[proxybox]  (pA) at (5.5, 6.0) {pqc-proxy-a\\{\fontsize{7}{8}\selectfont :1883 / :9101}};
+\node[proxybox]  (pB) at (5.5, 3.5) {pqc-proxy-b\\{\fontsize{7}{8}\selectfont :1883 / :9102}};
+\node[proxybox]  (pC) at (5.5, 1.0) {pqc-proxy-c\\{\fontsize{7}{8}\selectfont :1883 / :9103}};
+
+\node[brokerbox] (mq) at (10.5, 3.5) {mosquitto\\{\fontsize{7}{8}\selectfont :8883 (PQC-TLS)}};
+
+\node[obsbox]    (pe) at (2.5,  -1.8) {prometheus\\{\fontsize{7}{8}\selectfont :9090}};
+\node[obsbox]    (gr) at (7.5,  -1.8) {grafana\\{\fontsize{7}{8}\selectfont :3000}};
+\node[obsbox]    (ne) at (10.5, -1.8) {node-exporter\\{\fontsize{7}{8}\selectfont :9100}};
+
+%% ── Hálózati tartományok (háttérréteg) ────────────────────────────────
+\begin{scope}[on background layer]
+  %% sensor-1-net
+  \fill[blue!5, rounded corners=5pt]
+    (-1.7, 5.35) rectangle (7.2, 6.65);
+  \node[netlabel, blue!55!black] at (2.75, 6.56)
+    {\textit{sensor-1-net}};
+
+  %% sensor-2-net
+  \fill[blue!5, rounded corners=5pt]
+    (-1.7, 2.85) rectangle (7.2, 4.15);
+  \node[netlabel, blue!55!black] at (2.75, 4.06)
+    {\textit{sensor-2-net}};
+
+  %% sensor-3-net
+  \fill[blue!5, rounded corners=5pt]
+    (-1.7, 0.35) rectangle (7.2, 1.65);
+  \node[netlabel, blue!55!black] at (2.75, 1.56)
+    {\textit{sensor-3-net}};
+
+  %% broker-net (átfedi a proxy oszlopot)
+  \fill[green!7, rounded corners=5pt]
+    (4.1, 0.1) rectangle (12.0, 6.9);
+  \node[netlabel, green!45!black] at (8.0, 6.75)
+    {\textit{broker-net}};
+
+  %% observability-net
+  \fill[violet!6, rounded corners=5pt]
+    (1.0, -2.55) rectangle (12.0, -1.1);
+  \node[netlabel, violet!50!black] at (6.5, -1.22)
+    {\textit{observability-net}};
+\end{scope}
+
+%% ── Adatforgalmi nyilak ────────────────────────────────────────────────
+% IoT → Proxy (egyszerű MQTT, titkosítatlan, izolált belső hálózaton)
+\draw[arr, blue!60!black]
+    (nA.east) -- node[above, font=\fontsize{7}{8}\selectfont\sffamily] {MQTT} (pA.west);
+\draw[arr, blue!60!black]
+    (nB.east) -- node[above, font=\fontsize{7}{8}\selectfont\sffamily] {MQTT} (pB.west);
+\draw[arr, blue!60!black]
+    (nC.east) -- node[above, font=\fontsize{7}{8}\selectfont\sffamily] {MQTT} (pC.west);
+
+% Proxy → Mosquitto (PQC-TLS, :8883)
+\draw[arr, red!60!black, line width=1.5pt]
+    (pA.east) to[out=5, in=145]
+    node[pos=0.38, above, font=\fontsize{7}{8}\selectfont\sffamily, sloped] {PQC-TLS}
+    (mq.north west);
+\draw[arr, red!60!black, line width=1.5pt]
+    (pB.east) --
+    node[above, font=\fontsize{7}{8}\selectfont\sffamily] {PQC-TLS}
+    (mq.west);
+\draw[arr, red!60!black, line width=1.5pt]
+    (pC.east) to[out=-5, in=215]
+    node[pos=0.38, below, font=\fontsize{7}{8}\selectfont\sffamily, sloped] {PQC-TLS}
+    (mq.south west);
+
+% Prometheus scraping (szaggatott nyilak)
+\draw[sarr] (pe) to[out=110, in=250] (nA.south);
+\draw[sarr] (pe) to[out=100, in=260] (nB.south);
+\draw[sarr] (pe) to[out=90,  in=270] (nC.south);
+\draw[sarr] (pe) to[out=70,  in=250] (pA.south);
+\draw[sarr] (pe) to[out=80,  in=260] (pB.south);
+\draw[sarr] (pe) to[out=85,  in=270] (pC.south);
+\draw[sarr] (pe.east) --
+    node[above, font=\fontsize{7}{8}\selectfont\sffamily] {PromQL}
+    (gr.west);
+\draw[sarr] (pe.east) to[out=0, in=180] (ne.west);
+
+\end{tikzpicture}
+\caption{A labor hálózati topológiája}
+\label{fig:lab-topology}
+\end{figure}
+
+\begin{itemize}
+    \item \texttt{broker-net}: nyilvános bridge hálózat, amelyen a Mosquitto MQTT broker és a
+          három PQC proxy osztozik. Ezen folyik a PQC-TLS titkosított MQTT forgalom (8883/tcp).
+    \item \texttt{sensor-1-net}, \texttt{sensor-2-net}, \texttt{sensor-3-net}: 3 internal
+          Docker bridge hálózat, amelyek egyenként csak az adott IoT-csomópontot és a hozzá
+          tartozó proxyt látják. Az IoT-csomópontok így nem érhetik el közvetlenül a brokert.
+    \item \texttt{observability-net}: bridge hálózat, amelyen a Prometheus, a Grafana és az
+          IoT-csomópontok metrikaexporterei kommunikálnak. Nincs közvetlen kapcsolata a
+          \texttt{broker-net}-tel.
+\end{itemize}
+
+Ez a topológia reprodukálja azt az ipari mintát, ahol az IoT végpontok
+(\texttt{temperature-sensor-1/2/3}) egy dedikált biztonsági proxyn (jelen esetben egy PQC-képes
+stunnel sidecar-on, \texttt{pqc-proxy-a/b/c}) keresztül érik el az MQTT brokert, és így a PQC
+kézfogás kizárólag a proxy–broker szegmensen történik. A hálózati felépítést a
+\ref{fig:lab-topology}. ábra szemlélteti.
+
+
+\subsection{Az adatfolyam és a titkosítás helye}
+
+Az alábbiakban lépésről lépésre bemutatom, hogy egy szenzorüzenet hogyan jut el az
+IoT-csomóponttól a brokerig, és pontosan hol lép be a kriptográfia.
+
+\begin{enumerate}
+
+    \item \textbf{Üzenet előállítása az IoT-csomóponton.}
+    Minden IoT-csomópont (\texttt{temperature-sensor-1/2/3}) egy Python~3.12
+    folyamat, amely 5~másodpercenként publikál egy szimulált hőmérsékleti értéket
+    a \texttt{sensors/temperature} MQTT-topikra. Az üzenet JSON-formátumú:
+\begin{verbatim}
+{"sensor_id": "temperature-sensor-1",
+ "temperature": 23.47,
+ "timestamp": 1715500800.0}
+\end{verbatim}
+    Ez az üzenet maga \emph{nem tartalmaz semmilyen titkosítást}: az IoT-csomópont
+    nem tölt be PQC-könyvtárat, és nem végez kriptográfiai műveletet.
+
+    \item \textbf{Titkosítatlan MQTT-szakasz: csomópont $\to$ proxy.}
+    A \texttt{PUBLISH} csomag sima TCP-kapcsolaton (\texttt{sensor-N-net}, 1883/tcp)
+    jut el az adott csomóponthoz dedikált \texttt{pqc-proxy-a/b/c} sidecar
+    konténerébe. Ez az egy-egy izolált Docker bridge hálózaton fut, amelyre rajta
+    kívül más konténer nem csatlakozik, így a titkosítás hiánya ezen a rövidített,
+    helyi szegmensen nem jelent biztonsági kockázatot.
+
+    \item \textbf{PQC-TLS kézfogás: proxy $\leftrightarrow$ broker.}
+    A proxy indításakor a stunnel TLS~1.3 kézfogást kezdeményez a Mosquitto broker
+    felé (8883/tcp, \texttt{broker-net}). A kézfogás \texttt{KeyShare} lépésében a
+    konfigurált PQC algoritmus kerül alkalmazásra:
+    \begin{itemize}
+        \item A \textbf{broker} (TLS-szerver) az oqs-provider segítségével generál
+              egy KEM-kulcspárt, és a nyilvános kulcsot elküldi a proxynak.
+        \item A \textbf{proxy} (TLS-kliens) a nyilvános kulccsal becsomagol egy
+              véletlen titkot (\emph{encapsulate}), majd a kapszulát visszaküldi a
+              brokernek.
+        \item Mindkét fél önállóan levezet egy azonos \textbf{munkamenetkulcsot}
+              (\emph{shared secret}) -- a proxy a kapszulálás, a broker a
+              visszafejtés (\emph{decapsulate}) révén.
+    \end{itemize}
+    A munkamenetkulcsból a TLS~1.3 kulcslevezetési függvénye (HKDF) állítja elő a
+    szimmetrikus forgalomvédelmi kulcsokat. \emph{Ez az a lépés, ahol az ML-KEM,
+    a BIKE vagy az X25519 algoritmus aktívan részt vesz.}
+
+    \item \textbf{Titkosított MQTT-forgalom: proxy $\to$ broker.}
+    A kézfogás után a proxy a szenzortól érkező \texttt{PUBLISH} csomagot
+    \textbf{AES-128-GCM} szimmetrikus titkosítással védi és továbbítja a brokernek.
+    A TLS-rekordban utazó tartalom -- beleértve a JSON hőmérsékleti adatot, a
+    QoS~1 \texttt{PUBLISH} fejlécet és a csomagazonosítót -- a hálózaton kívülről
+    olvashatatlan.
+
+    \item \textbf{Dekódolás a Mosquitto brokernél.}
+    A Mosquitto broker TLS-rétege (stunnel szerver, szintén oqs-provider) a
+    munkamenetkulccsal visszafejti a TLS-rekordot, és az így kapott sima
+    \texttt{PUBLISH} csomagot az MQTT-protokollnak megfelelően dolgozza fel
+    (visszaigazolás QoS~1 esetén: \texttt{PUBACK}).
+
+\end{enumerate}
+
+Összefoglalva: a PQC algoritmus a munkamenetkulcs biztonságos megegyezésére
+(KEM) szolgál, nem közvetlenül az adat titkosítására. A szenzorüzenet tényleges
+védelme AES-128-GCM szimmetrikus titkosítással történik, amelynek kulcsát a PQC KEM
+teszi kvantumszámítógép ellen is ellenállóvá. A mérések során rögzített MQTT
+publish-ciklus késleltetés pontosan ezt a teljes kört -- JSON előállítás,
+proxy-továbbítás, TLS-rekordküldés, PUBACK-visszatérés -- foglalja magában.
 
 \subsection{Energiaellátás és mérőeszközök}
 
-% TODO: Ha energiamérés is történt: milyen eszközzel (pl. INA219 áramszenzor, PowerProfiler Kit),
-% hogyan lett bekötve. Ha nem, ez az alfejezet elhagyható.
+A mérési összeállítás szoftveres metrikaexportereken alapult; dedikált hardveres energiamérő
+eszköz (pl.\ INA219 áramszenzor) nem került alkalmazásra, így az energiafogyasztás közvetlen
+mérése nem történt meg. A processzorkihasználtságot a Python \texttt{psutil} könyvtár
+\texttt{cpu\_percent()} hívásával becsülöm folyamatonként. A valódi energiafogyasztás
+meghatározásához jövőbeli munkában hardveres mérőeszköz integrálása javasolt.
 
 %----------------------------------------------------------------------------
 \section{Szoftverkörnyezet}
@@ -30,26 +225,164 @@ topológiát.
 
 \subsection{Operációs rendszer és alapkönyvtárak}
 
-% TODO: OS verzió, kernel, libc, gcc/clang verzió, cmake verzió.
+A hoszt operációs rendszer Ubuntu 24.04~LTS (linux/amd64). A kriptográfiai könyvtárakat igénylő
+komponensek (Mosquitto broker, PQC proxy) alapja a \texttt{pqc-base:latest} egyedi Docker image,
+amelyet a \texttt{base-image/Dockerfile} definiál: ez \texttt{ubuntu:24.04}-re épül, és
+forrásból fordítja be a liboqs és az oqs-provider könyvtárakat. Az IoT-csomópontok
+(\texttt{temperature-sensor-1/2/3}) \texttt{python:3.12-slim} alapképet használnak, mivel nem
+igényelnek PQC-könyvtárakat -- a biztonságos TLS kézfogást a proxy sidecar végzi el helyettük.
+A liboqs és az oqs-provider fordításához szükséges build-függőségek: \texttt{build-essential},
+\texttt{cmake}, \texttt{ninja-build}, \texttt{libssl-dev}, \texttt{python3-dev}, \texttt{git},
+\texttt{curl}, \texttt{astyle} és \texttt{pkg-config}.
 
 \subsection{Kriptográfiai könyvtárak}
 
-% TODO: wolfSSL / OpenSSL-OQS verzió, liboqs verzió, oqs-provider verzió, fordítási flagek
-% (pl. -O2, konstans idejű fordítás, hardveres gyorsítás be/ki).
+A PQC-képes TLS stack két nyílt forráskódú komponensre épül, amelyeket forrásból kell fordítani,
+mivel a rendszercsomagok nem tartalmazzák őket:
+
+\begin{itemize}
+    \item \textbf{liboqs} -- az Open Quantum Safe projekt alap C-könyvtára, amely az összes
+          mért PQC algoritmust implementálja. A build során a következő CMake opciók kerültek
+          alkalmazásra: \texttt{-DOQS\_DIST\_BUILD=ON} (architektúrafüggetlen binárisok),
+          \texttt{-DBUILD\_SHARED\_LIBS=ON} (megosztott könyvtárként), \texttt{-DOQS\_USE\_OPENSSL=ON}
+          (OpenSSL-integrált hash-primitívek). A telepítési cél \texttt{/usr/local}, a könyvtárak
+          \texttt{ldconfig} hívással kerülnek regisztrálásra.
+    \item \textbf{oqs-provider} -- az OpenSSL~3 Provider architektúráját megvalósító modul,
+          amely a liboqs algoritmusait az OpenSSL kriptográfiai keretrendszerébe illeszti be.
+          A fordítás a \texttt{liboqs\_DIR=/usr/local/lib/cmake/liboqs} és
+          \texttt{OPENSSL\_MODULES\_PATH=/usr/local/lib/ossl-modules} paraméterekkel történt.
+          A kész \texttt{oqsprovider.so} dinamikus könyvtár az utóbbi könyvtárba kerül.
+\end{itemize}
+
+Az OpenSSL konfigurálása egy dedikált \texttt{/etc/ssl/oqs-openssl.cnf} fájlon keresztül
+történik, amelyet a \texttt{OPENSSL\_CONF} környezeti változó mutat. Ez a konfiguráció
+aktiválja az \texttt{oqsprovider}-t, és a TLS~1.3 kulcscserecsoportok alapértelmezett
+listáját a következőképpen állítja be: \texttt{mlkem512}, \texttt{mlkem768},
+\texttt{mlkem1024}, \texttt{X25519MLKEM768}, \texttt{bikel1}, \texttt{bikel3},
+\texttt{bikel5}, \texttt{x25519}, \texttt{P-256}, \texttt{P-384}, \texttt{P-521}.
+
+A TLS tanúsítványok hitelesítési algoritmusként ECDSA P-256-ot (prime256v1 görbe) alkalmaznak.
+A PQC algoritmus kizárólag a kulcscsere (KEM) fázisban jelenik meg a TLS~1.3 kézfogás
+során, a tanúsítványaláírásban nem. Ez összhangban van a hibrid migrációs ajánlásokkal, amelyek
+a tanúsítványlánc méretét klasszikus szinten tartják. A generált tanúsítványok mérete:
+CA-kulcs 227~bájt, CA-tanúsítvány 627~bájt, szerverkulcs 227~bájt, szerver-tanúsítvány
+611~bájt (ECDSA P-256).
 
 \subsection{MQTT infrastruktúra}
 
-% TODO: Eclipse Mosquitto verzió, konfigurációs paraméterek (port, TLS verzió, cipher suite),
-% kliens könyvtár (paho, mosquitto_pub/sub stb.).
+Az MQTT broker az Eclipse Mosquitto, amelyet a Ubuntu csomagkezelőjéből telepítettem
+(\texttt{mosquitto} + \texttt{mosquitto-clients} + \texttt{stunnel4}). A broker a loopback
+interfészen hallgat titkosítatlan MQTT-kapcsolatokra (1883/tcp, kizárólag 127.0.0.1-ről
+elérhető), míg a PQC-TLS lezárást a stunnel szerveroldali példánya végzi (8883/tcp, nyilvánosan
+elérhető a \texttt{broker-net}-en belül).
+
+Az IoT-csomópontokat egy Python~3.12 alapú konténer valósítja meg (\texttt{python:3.12-slim}
+alapképpel). A csomópont a következő könyvtárakat használja:
+\texttt{paho-mqtt} 2.1.0 (MQTT~5 kliens), \texttt{prometheus\_client} 0.21.0 (metrikaexport),
+\texttt{psutil} 6.1.0 (folyamat-szintű erőforrás-mérés). Az MQTT publikus intervallum
+5~másodpercre lett beállítva (\texttt{PUBLISH\_INTERVAL=5}), QoS~1 minőségi szinttel.
 
 \subsection{Konténerizáció és reprodukálhatóság}
 
-% TODO: Docker image verziók, Dockerfile főbb lépései, volume- és portmapping.
+Az összes komponens Docker Compose v2 orkesztrációval indul, amelyet a \texttt{docker-compose.yml}
+definiál. Az algoritmus és a CPU-kvóta \texttt{.env} fájlból propagál minden konténerhez,
+így az algoritmusváltáshoz nem szükséges az image-ek újraépítése, csupán elegendő a
+\texttt{PQC} és \texttt{ALG} változó módosítása, majd a konténerek újraindítása.
+
+A megfigyelési réteget négy komponens alkotja: Prometheus (\texttt{prom/prometheus:latest}),
+Grafana (\texttt{grafana/grafana:latest}), cAdvisor (\texttt{gcr.io/cadvisor/cadvisor:latest}) és
+node-exporter (\texttt{prom/node-exporter:latest}). A Prometheus -- hogy az összes célpontot
+elérhesse -- egyszerre tagja az \texttt{observability-net}, a \texttt{broker-net} és mindhárom
+\texttt{sensor-*-net} hálózatnak, és 10~másodpercenként gyűjt adatot a következő végpontokról:
+\begin{itemize}
+    \item IoT-csomópontok (\texttt{temperature-sensor-\{1,2,3\}:9100}) -- MQTT publish-ciklus
+          késleltetés, üzenetszám, erőforrás-metrikák;
+    \item PQC proxyk (\texttt{pqc-proxy-\{a,b,c\}:9101}) -- TLS kézfogás késleltetése
+          (\texttt{handshake\_latency\_ms}), induláskor mérve és statikusan tárolva;
+    \item cAdvisor (\texttt{cadvisor:8080}) -- konténer-szintű CPU-, memória- és
+          hálózati metrikák valós időben;
+    \item node-exporter (\texttt{node-exporter:9100}) -- hoszt-szintű rendszermetrikák.
+\end{itemize}
+A Grafana dashboardja automatikusan konfigurált (provisioning) a
+\texttt{grafana/provisioning/} könyvtárból.
+
+\subsection{A Prometheus és a Grafana szerepe a mérési infrastruktúrában}
+
+A kísérleti hálózatban a megfigyelési réteg nem opcionális kiegészítő, hanem a
+mérési módszer szerves része: az összes kvantitatív eredmény -- a késleltetés-hisztogramok,
+a memóriahasználat, az újracsatlakozásszám -- kizárólag a Prometheus által gyűjtött
+metrikákból származik.
+
+\textbf{Prometheus szükségessége.}
+Az IoT-csomópontok Python-kódja a \texttt{prometheus\_client} könyvtáron keresztül
+exportálja a mért értékeket: az MQTT publish-ciklus késleltetését hisztogramként, az
+üzenetszámot számlálóként, az RSS-memóriát mérőszámként. Ezek az értékek az egyes
+konténerek belső memóriájában keletkeznek. A tartós tároláshoz és összesítéshez egy
+külső gyűjtőre van szükség. A Prometheus pull-alapú modellje 10~másodpercenként
+lekérdezi az összes végpontot, és idősoros adatbázisában tárolja az eredményeket.
+A kísérlet végén a mért adatok ebből az adatbázisból kerülnek exportálásra a
+PromQL \texttt{/api/v1/query} végponton keresztül. Prometheus nélkül a konténerek
+leállásakor minden metrika elveszne.
+
+\textbf{Grafana szükségessége.}
+A kísérletek futása közben elengedhetetlen a valós idejű visszajelzés: látni kell, hogy
+az IoT-csomópontok ténylegesen publikálnak-e, a PQC proxy sikeresen épít-e TLS-kapcsolatot,
+és a késleltetések a várt tartományban maradnak-e. A Grafana a Prometheus adatbázisát
+adatforrásként használva élő dashboardon jeleníti meg ezeket az értékeket, lehetővé téve
+a kísérlet közbeni hibakeresést -- pl.\ ha egy csomópont nem csatlakozik, a publish-ráta
+azonnal nullára esik a dashboardon. Az \texttt{observability-net} hálózati szegmens
+kizárólag ennek a kommunikációnak ad otthont: Prometheus~$\leftrightarrow$~Grafana, és
+Prometheus~$\leftrightarrow$~cAdvisor/node-exporter között.
+
+\textbf{cAdvisor és node-exporter szerepe.}
+A cAdvisor a Docker Engine API-ján keresztül konténer-szintű CPU- és memóriafelhasználást
+mér, a node-exporter pedig a hoszt operációs rendszer szintjén biztosít rendszermetrikákat.
+Ezek kiegészítik az alkalmazásszintű metrikákat. Amíg az IoT-csomópont saját RSS-értékét
+\texttt{psutil}-lal méri, a cAdvisor a Docker cgroup-korláttal összevethető külső
+nézőpontot nyújt, ami a CPU-kvóta hatásának ellenőrzésekor kulcsfontosságú.
 
 %----------------------------------------------------------------------------
 \section{A mérési környezet összefoglalása}
 %----------------------------------------------------------------------------
 
-% TODO: Rövid összefoglaló táblázat a főbb komponensekről és verziókról.
-% Esetleg megjegyzés arról, hogy a környezet hogyan tér el a valódi IoT deploymenttől
-% (pl. teljesítménybeli különbség egy gyári Cortex-M0 és a tesztplatform között).
+A \ref{tab:env-summary}. táblázat összefoglalja a mérési labor főbb szoftverkomponenseit,
+azok verzióit és szerepeiket. A komponensek köre lefedi a teljes mérési stacket: a
+konténerizációs rétegtől a PQC könyvtárakon és az MQTT stack-en át a megfigyelési
+infrastruktúráig (Prometheus, Grafana, cAdvisor, node-exporter).
+
+\begin{table}[ht]
+\centering
+\caption{A mérési környezet főbb komponensei}
+\label{tab:env-summary}
+\begin{tabular}{lll}
+\hline
+\textbf{Komponens} & \textbf{Verzió / konfiguráció} & \textbf{Szerepe} \\
+\hline
+Host OS             & Ubuntu 24.04 LTS (x86-64)          & Hoszt platform \\
+Docker Engine       & $\geq$ 24, Compose v2              & Konténerizáció \\
+pqc-base image      & ubuntu:24.04 + liboqs + oqs-provider & Broker és proxy alapja \\
+IoT-node image      & python:3.12-slim                    & Szenzor csomópontok alapja \\
+liboqs              & main ág (2026. jún.)                & PQC algoritmusok \\
+oqs-provider        & main ág (2026. jún.)                & OpenSSL integráció \\
+OpenSSL             & 3.x (rendszer, Ubuntu 24.04)        & TLS stack \\
+stunnel4            & apt (Ubuntu 24.04)                  & TLS proxy/sidecar \\
+Eclipse Mosquitto   & apt (Ubuntu 24.04)                  & MQTT broker \\
+paho-mqtt           & 2.1.0                               & MQTT kliens \\
+prometheus\_client  & 0.21.0                              & Metrikaexport \\
+psutil              & 6.1.0                               & Erőforrás-mérés \\
+Prometheus          & prom/prometheus:latest              & Metrikagyűjtés \\
+Grafana             & grafana/grafana:latest              & Vizualizáció \\
+cAdvisor            & gcr.io/cadvisor:latest              & Konténer-szintű metrikák \\
+node-exporter       & prom/node-exporter:latest           & Hoszt-szintű metrikák \\
+\hline
+\end{tabular}
+\end{table}
+
+A labor legfontosabb eltérése egy valódi IoT telepítéstől az, hogy a mérési platform
+x86-64 architektúrán fut Docker CPU-kvótával emulált korlátok mellett, nem natív ARM
+mikrovezérlőn. Az ebből fakadó különbségek: az x86-64 hardveres AES-NI és AVX2 utasítások
+gyorsíthatják a szimmetrikus primitíveket, míg egy ARM Cortex-M4 vagy Cortex-A53 más
+utasításkészleten (NEON, nincs AVX2) hajtja végre ugyanazokat a műveleteket. A mért
+eredmények így az algoritmusok relatív teljesítménykülönbségét és a CPU-korlát hatását
+rögzítik megbízhatóan, az abszolút futási idők azonban egy adott ARM-eszköz esetén
+eltérhetnek.

@@ -1,0 +1,25 @@
+; stunnel konfiguráció – PQC TLS proxy
+; A PQC_ALG értéket az envsubst helyettesíti be a konténer indításakor
+
+foreground = yes
+debug = 4
+syslog = no
+output = /dev/stdout
+
+pid = /run/stunnel/stunnel.pid
+
+; Az OpenSSL TLSv1.3 használata PQC kulcscsere-csoporttal
+[mqtt-pqc]
+client = yes
+accept  = 0.0.0.0:1883
+connect = mosquitto:8883
+
+sslVersion = TLSv1.3
+CAfile = /certs/ca.crt
+verify = 2
+
+; PQC algoritmus beállítása kulcscsere-csoportként
+curves = ${PQC_ALG}
+
+; Életben tartás
+TIMEOUTclose = 0

@@ -1,33 +1,162 @@
 \chapter{Eredmények kiértékelése}
 
 Jelen fejezet a mért adatok részletes elemzését és értelmezését tartalmazza. A fejezet célja,
-hogy a nyers mérési eredményekből következtetéseket vonjon le a CRYSTALS-Kyber és a BIKE
-algoritmusok IoT alkalmazhatóságáról, és összehasonlítsa a két protokoll teljesítményét
-különböző szempontok szerint.
+hogy a nyers mérési eredményekből következtetéseket vonjon le a vizsgált PQC algoritmusok
+IoT alkalmazhatóságáról, és összehasonlítsa a három protokoll rendszerszintű viselkedését.
 
 %----------------------------------------------------------------------------
 \section{Teljesítmény összehasonlítása}
 %----------------------------------------------------------------------------
 
-\subsection{Futási idő összehasonlítása}
+\subsection{MQTT publish-ciklus késleltetése: ML-KEM-768 és X25519}
 
-% TODO: Összefoglaló táblázat és oszlopdiagramok: KeyGen / Encap / Decap futási idő
-% Kyber vs. BIKE, biztonsági szintenként. Relatív különbségek kiemelése.
+A mérések legfontosabb megállapítása, hogy \textbf{az ML-KEM-768 és az X25519 MQTT
+publish-ciklus késleltetése a steady-state forgalom szintjén nem különbözik szignifikánsan}.
+A $p_{50}$ medián értéke mindkét algoritmusnál $\approx 1{,}5$~ms, a $p_{95}$
+0,25~mag felett 2--5~ms, a $p_{99}$ 1,0~magon 7--8~ms. Ez az eredmény összhangban van
+azzal az elméleti várakozással, hogy a TLS~1.3 kézfogás -- amely a PQC KEM számítást
+tartalmazza -- csupán egyszer zajlik le a munkamenet elején, az azt követő MQTT
+publish/PUBACK ciklus már szimmetrikus AES-128-GCM titkosítással folyik, amelynek
+overhead-je algoritmusfüggetlen.
 
-\subsection{Memóriaigény összehasonlítása}
+A CPU-korlát hatása azonban markáns: 0,026~magon (ESP32 szint) a $p_{95}$ ML-KEM-768-nál
+$\approx 235$~ms, X25519-nél $\approx 166$~ms; 0,12~magon (RPi Zero 2W szint) már 57~ms
+illetve 49~ms; 0,25~mag felett (RPi 3B+ és fölötte) mindkettő $\approx 2$--$5$~ms közé
+esik, 1,0~magon $\approx 2{,}2$~ms-ra csökken (lásd \ref{fig:latency-vs-cpu}. ábra). Ez a CPU-szenzitivitás nem a PQC KEM
+algoritmushoz, hanem a stunnel proxy processz CPU-éhezéséhez köthető: ha a konténer kevés
+CPU-időt kap, a stunnel késlelteti a TLS-rekord kibontását és az MQTT TCP-szegmensek
+továbbítását, ami alkalmi nagy késleltetésű eseményeket okoz.
 
-% TODO: RAM- és flash-lábnyom összehasonlítása; hogyan aránylik a tipikus Cortex-M
-% eszközök korlátaihoz (pl. 64 kB RAM korlát).
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{semilogyaxis}[
+    width=0.85\textwidth,
+    height=6.5cm,
+    xlabel={CPU-korlát (mag)},
+    ylabel={Késleltetés (ms, log~skála)},
+    xmin=0.015, xmax=1.1,
+    ymin=1, ymax=700,
+    xtick={0.026, 0.12, 0.25, 0.5, 1.0},
+    xticklabels={0{,}026, 0{,}12, 0{,}25, 0{,}5, 1{,}0},
+    ytick={1,2,5,10,20,50,100,200,500},
+    yticklabels={1,2,5,10,20,50,100,200,500},
+    grid=both,
+    grid style={line width=0.3pt, draw=gray!30},
+    major grid style={line width=0.5pt, draw=gray!50},
+    legend style={
+        at={(0.98,0.98)}, anchor=north east,
+        font=\small,
+        cells={anchor=west},
+        draw=gray!60,
+    },
+    tick label style={font=\small},
+    label style={font=\small},
+    mark size=2.5pt,
+    line width=1.2pt,
+]
 
-\subsection{Kulcs- és kapszulaméret összehasonlítása}
+%% ML-KEM-768 p95
+\addplot[color=blue!70!black, mark=square*, solid]
+    coordinates {(0.026,235.4) (0.12,56.8) (0.25,4.1) (0.5,2.3) (1.0,2.2)};
+\addlegendentry{ML-KEM-768 $p_{95}$}
 
-% TODO: Nyilvános kulcs, privát kulcs, kapszula (ciphertext) méretei bájtban,
-% összehasonlítás RSA-2048 / ECDH P-256 referenciaértékekkel.
-% Milyen hatással van ez a LoRaWAN / NB-IoT payload-korlátokra.
+%% ML-KEM-768 p99
+\addplot[color=blue!70!black, mark=square*, dashed]
+    coordinates {(0.026,482.6) (0.12,91.4) (0.25,80.9) (0.5,8.6) (1.0,6.6)};
+\addlegendentry{ML-KEM-768 $p_{99}$}
 
-\subsection{TLS kézfogás teljesítménye}
+%% X25519 p95
+\addplot[color=orange!80!black, mark=triangle*, solid]
+    coordinates {(0.026,165.9) (0.12,49.0) (0.25,4.2) (0.5,2.7) (1.0,2.2)};
+\addlegendentry{X25519 $p_{95}$}
 
-% TODO: Handshake idő és üzenetméret vizsgálata; hálózati overhead becslése.
+%% X25519 p99
+\addplot[color=orange!80!black, mark=triangle*, dashed]
+    coordinates {(0.026,452.2) (0.12,86.8) (0.25,75.6) (0.5,29.2) (1.0,7.5)};
+\addlegendentry{X25519 $p_{99}$}
+
+\end{semilogyaxis}
+\end{tikzpicture}
+\caption{MQTT publish $p_{95}$ és $p_{99}$ késleltetés CPU-korlát függvényében
+(logaritmikus skála), ML-KEM-768 és X25519 összehasonlításban}
+\label{fig:latency-vs-cpu}
+\end{figure}
+
+Az összes ML-KEM variáns -- ML-KEM-512, ML-KEM-768, ML-KEM-1024 és a hibrid
+X25519+ML-KEM-768 -- ugyanezt a küszöbhatást mutatja: a $p_{99}$ értéke minden variánsnál
+a 0,12--0,25~mag átmenetben csökken az elfogadható szintre, megerősítve, hogy a jelenség
+nem algoritmusfüggő, hanem a proxy CPU-kvótájára vezethető vissza. A \ref{fig:p99-latency-all}. ábra
+ezt a négy ML-KEM konfigurációt és az X25519 referenciagörbét jeleníti meg logaritmikus
+$p_{99}$ skálán, CPU-korlát függvényében.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\textwidth]{figures/01_p99_latency_mlkem_x25519.png}
+\caption{MQTT publish $p_{99}$ késleltetés CPU-korlát függvényében -- összes ML-KEM variáns és X25519 referencia}
+\label{fig:p99-latency-all}
+\end{figure}
+
+A \ref{fig:p99-latency-all}. ábrán öt görbe látható: ML-KEM-512, ML-KEM-768, ML-KEM-1024,
+az X25519+ML-KEM-768 hibrid és az X25519 referencia. Mindegyik görbe 0,026~magon
+100--500~ms közötti $p_{99}$ értékről indul, majd a 0,12--0,25~mag átmenetben meredeken
+esik: 0,25~magon már minden görbe a szaggatott vízszintes 50~ms határvonal alá kerül, és
+0,5--1,0~magon az összes konfiguráció $p_{99}$ értéke 50~ms alá esik. A görbék egymáshoz
+képesti eltérése kisebb, mint a csomópontok közötti mérési szórás, ami azt jelenti, hogy az
+ML-KEM biztonsági szintjének megválasztása (512, 768 vagy 1024 bites) a MQTT publish
+késleltetésre nézve elhanyagolható hatással jár.
+
+A TLS-kézfogás és a MQTT publish $p_{99}$ egymáshoz viszonyított arányát a
+\ref{fig:handshake-vs-p99}. ábra szemlélteti a két szélső CPU-szinten.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/04_handshake_vs_p99_bar.png}
+\caption{TLS kézfogás latencia és MQTT publish $p_{99}$ összehasonlítása ipari átjáró (1,0~mag) és ESP32 (0,026~mag) szinten}
+\label{fig:handshake-vs-p99}
+\end{figure}
+
+A \ref{fig:handshake-vs-p99}. ábra bal panelje (ipari átjáró, 1,0~mag) azt mutatja, hogy a
+kézfogás és a $p_{99}$ MQTT késleltetés azonos nagyságrendű: a TLS kézfogás
+$23$--$26$~ms, a $p_{99}$ $5$--$9$~ms, mindkettő jóval az 50~ms határon belül. A jobb
+panelen (ESP32, 0,026~mag) a kézfogás ($\approx 888$--$1110$~ms) az egész kapcsolatfelépítési
+folyamatot uralja, a $p_{99}$ MQTT késleltetés pedig ($\approx 280$--$483$~ms) szintén
+megemelkedik -- ez utóbbi a stunnel puffer-kiürítési torlódásaira vezethető vissza. A két
+panel együttesen azt illusztrálja, hogy alacsony CPU-szinten nem a kézfogás egyszeri
+időigénye, hanem annak ismétlődő kiváltódása (TLS újraegyeztetés) és a puffertelítés a
+dominálod tényező.
+
+
+
+\FloatBarrier
+\subsection{BIKE-L1 operatív instabilitása}
+
+A BIKE-L1 futtatásai rámutattak arra, hogy ez az algoritmus a vizsgált infrastruktúrában
+nem alkalmas megbízható steady-state MQTT kommunikáció fenntartására. A QoS~1 PUBACK-ok
+teljes elmaradása (\texttt{ack\_ratio}: --), a PUBACK-figyelő által rögzített 30\,000~ms-os
+időtúllépési értékek és a $\approx 20$--$47$\%-kal alacsonyabb üzenetküldési ráta
+(0,107--0,160~msg/s vs. 0,20~msg/s) arra utal, hogy a BIKE-L1 TLS-kézfogás a proxy
+indításakor olyan késleltetést okoz, amely a stunnel-munkamenet időtúllépéséhez vagy a
+kapcsolat eldobásához vezet.
+
+A BIKE decoding alapalgoritmus -- az iteratív bit-flipping dekóder -- numerikusan
+intenzív, és különösen érzékeny a processzorterhelésre. A BIKE-L1 dekódolás legrosszabb
+esetű komplexitása jelentősen magasabb, mint az ML-KEM Fujisaki--Okamoto transzformációjáé,
+és a stunnel belső TLS-kézfogási időtúllépési korlátai (\texttt{TIMEOUTclose = 0})
+alacsony CPU-korlát esetén problémát okozhatnak. Ez a megfigyelés összhangban van a
+BIKE specifikációs anyagaiban közölt, ARM-alapú rendszerekre vonatkozó teljesítményadatokkal,
+amelyek szerint a BIKE-L1 dekodolás lényegesen lassabb, mint az ML-KEM megfelelője~\cite{BIKE-SPEC}.
+
+\FloatBarrier
+\subsection{Memóriaigény}
+
+A memóriahasználat tekintetében a három algoritmus között nem mértem érdemi különbséget:
+mindhárom esetben az IoT-csomópont Python-folyamatának RSS-je $32{,}0$--$32{,}6$~MB.
+Ezt azzal magyarázom, hogy az IoT-csomópont nem tölti be közvetlenül a PQC könyvtárakat.
+A liboqs és az oqs-provider a proxy konténerben fut, amelynek memóriafoglalása az
+IoT-csomópont metrikáiban nem jelenik meg. Ennek megfelelően a vizsgálat az IoT-csomópont
+szintjén nem tud különbséget tenni az algoritmusok memóriaigénye tekintetében. A
+proxy-oldali mérés a jövőbeli munkában elvégzendő.
 
 %----------------------------------------------------------------------------
 \section{Biztonsági szempontú értékelés}
@@ -35,13 +164,50 @@ különböző szempontok szerint.
 
 \subsection{Biztonsági szintek és NIST kategóriák}
 
-% TODO: NIST biztonsági szint I/III/V megfeleltetés, mi ez kvantumbitek számában
-% kifejezve (AES-128/192/256 ekvivalens).
+Az ML-KEM-768 a NIST biztonsági~II.\ kategóriának felel meg, amelyet az AES-192 feltörési
+nehézségével ekvivalensnek definiálnak: legalább $2^{178}$ műveletet igényel klasszikus
+algoritmussal, és $2^{89}$ kvantumkapu-komplexitású Grover-keresést. A BIKE-L1 a NIST~I.\
+biztonsági szintnek felel meg (AES-128-ekvivalens), míg az X25519 klasszikus biztonsági
+szintje 128~bit (AES-128-ekvivalens), azonban a Shor-algoritmus $O(\log^3 n)$ idő alatt
+megtöri. A \ref{tab:security-params}. táblázat összefoglalja az algoritmusok
+legfontosabb biztonsági paramétereit.
+
+\begin{table}[ht]
+\centering
+\caption{Az algoritmusok biztonsági paraméterei}
+\label{tab:security-params}
+\begin{tabular}{lllll}
+\hline
+\textbf{Algoritmus} & \textbf{NIST szint} & \textbf{Kvantum-ellenálló} & \textbf{Nyilv.\ kulcs} & \textbf{Kapszula} \\
+\hline
+ML-KEM-768  & II  & Igen (FIPS~203) & 1\,184~B & 1\,088~B \\
+BIKE-L1     & I   & Igen (jelölt)   & 1\,541~B & 1\,573~B \\
+X25519      & --  & Nem            &    32~B  &    32~B  \\
+\hline
+\end{tabular}
+\end{table}
+
+Megjegyezendő, hogy a TLS-kézfogásban a nyilvános kulcs és a kapszula mérete befolyásolja
+az első TLS-ClientHello és ServerHello cserék méretét. Az ML-KEM-768 esetén a kulcs (1\,184~B)
+és a kapszula (1\,088~B) egyaránt nagyobb, mint amit egyetlen hálózati csomag (tipikusan
+1500~bájt MTU) befogad, ezért IP-szintű töredezés vagy TLS-rekord-kettéválasztás szükséges.
+Ez a nagyobb méret alacsony sávszélességű csatornákon (NB-IoT, LoRaWAN) kihívást jelent,
+bár a vizsgált Docker-hálózaton nem volt mérhető hatása.
 
 \subsection{Ismert kriptanalitikai eredmények}
 
-% TODO: Rövid összefoglalás: mi az aktuális legjobb klasszikus és kvantum támadás
-% Kyber és BIKE ellen; mekkora a biztonsági tartalék.
+Az ML-KEM-768 alapjában álló modul-LWE problémát sem klasszikus, sem kvantumalgoritmussal
+nem sikerült polinomiális időben megoldani. A legismertebb rácsredukciós támadások (BKZ-2.0,
+progressive sieving) az ML-KEM-768 ellen $2^{178}$ klasszikus bitműveletet igényelnek,
+ami messze meghaladja a kvantum utáni biztonság küszöbét~\cite{CRYSTALS-KYBER}.
+A BIKE-L1 biztonsági alapja a kvasi-ciklikus MDPC (QC-MDPC) kód dekódolásának nehézsége.
+A legjobb ismert ISD (Information Set Decoding) alapú támadások $2^{128}$ klasszikus
+és $2^{64}$ kvantumkapuban mért komplexitással becsülhetők~\cite{BIKE-SPEC}.
+
+Fontos megemlíteni, hogy a BIKE biztonsági elemzése fiatalabb és kevésbé kiértékelt, mint az
+ML-KEM esetében, amelyet a NIST hatéves vizsgálati folyamata 2024-ben FIPS~203-ként
+szabványosított. A BIKE a NIST negyedik fordulójában is szerepel, de végleges szabványosítása
+még folyamatban van.
 
 %----------------------------------------------------------------------------
 \section{Alkalmazhatósági elemzés}
@@ -49,22 +215,126 @@ különböző szempontok szerint.
 
 \subsection{Erőforrás-korlátozott eszközökre vonatkozó következtetések}
 
-% TODO: Melyik biztonsági szint és algoritmus illeszkedik a vizsgált tesztplatformhoz?
-% Milyen minimális hardver szükséges az elfogadható teljesítményhez?
+A mérések alapján az ML-KEM-768 alkalmas a vizsgált IoT-profil MQTT kommunikációjának
+védelmére, amennyiben a biztonsági proxy (stunnel) legalább 0,25~processzormag kapacitással
+rendelkezik. E küszöb felett a $p_{95}$ MQTT publish-ciklus késleltetése nem haladja meg
+az 5~ms-t, ami az MQTT~QoS~1 üzenet-kézbesítési követelményei szempontjából elfogadható.
+
+A BIKE-L1 a vizsgált konténerizált proxy architektúrában nem produkált stabil MQTT
+munkameneteket. Mielőtt ipari IoT-telepítésben alkalmaznák, szükséges a TLS kézfogás
+időtúllépési paramétereinek finomhangolása, a stunnel timeout értékeinek növelése, illetve
+a BIKE-L1 hardveres gyorsításának (pl.\ ARM NEON SIMD utasítások) vizsgálata.
+
+Az X25519 klasszikus referenciakonfigurációként kiválóan teljesít, de -- mint azt az
+1.\ fejezet részletezte -- hosszú élettartamú IoT eszközök esetén a \emph{harvest now,
+decrypt later} fenyegetés miatt a PQC migráció elkerülhetetlen. A mérések egyértelműen
+mutatják, hogy az ML-KEM-768-ra való átállás a MQTT publish késleltetés tekintetében
+elhanyagolható overhead-del jár, így az átállást semmi sem indokolja halasztani.
 
 \subsection{Protokoll-szintű kihívások}
 
-% TODO: DTLS / MQTT payload-méret korlátok, fragmentálás kérdése, cryptographic agility
-% megvalósíthatósága a vizsgált stacken.
+A PQC algoritmusok egyik legjelentősebb gyakorlati következménye a kulcs megnövekedett
+mérete. Az X25519 esetén a nyilvános kulcs és a kapszula együttesen csupán $2 \times 32 = 64$~B,
+míg az ML-KEM-768 ugyanezekhez 1\,184~B + 1\,088~B = 2\,272~B-ot igényel -- ez
+közel harmincöt szörös növekmény. Ezt az adatmennyiséget a TLS~1.3 kézfogás során kell
+a felek között kicserélni, egyetlen kapcsolatfelépítési fázisban.
 
-\subsection{Kyber és BIKE összehasonlító értékelése}
+A méretbeli különbség kétféle hálózati kihívást támaszt. Egyrészt az ML-KEM-768 nyilvános
+kulcsa önmagában meghaladja a tipikus hálózati csomag befogadóképességét (Ethernet MTU:
+$\approx 1\,500$~B), a kapszulával együtt pedig IP-szintű töredezést vagy a TLS-rekord
+kettéosztását teszi szükségessé. Másrészt a széleskörűen elterjedt, szűk sávszélességű
+IoT-protokollok -- LoRaWAN: legfeljebb 250~B hasznos teher üzenetenként; NB-IoT: kb.\
+1\,400~B -- számára a teljes PQC TLS-kézfogás egyetlen adatcsomagba nem fér el. Ilyen
+környezetben alternatív megoldások szükségesek: munkamenet-folytatás (TLS session resumption),
+DTLS session ticket, vagy az alkalmazásrétegben előre megosztott szimmetrikus kulcsok
+(pre-shared key, PSK) alkalmazása.
 
-% TODO: Táblázatos összefoglalás: sebesség, kulcsméret, memória, biztonsági szint,
-% szabványosítási státusz, implementációs érettség. Melyik mikor preferált?
+A vizsgált Docker-hálózaton ez a probléma nem jelentkezett, mert a belső bridge hálózat
+65\,535~B-os virtuális MTU-t alkalmaz, amely a legnagyobb PQC üzeneteket is töredezés
+nélkül befogadja. Ez tudatos kompromisszum a labor kialakításában. A kézfogási késleltetés
+és a stabilitás vizsgálatára alkalmas, azonban valódi fizikai hálózaton a töredezési
+viselkedést külön kell értékelni. A TLS-kézfogás CPU-függő latenciáját -- és ezzel a
+kulcsméret közvetlen hatását a kapcsolatfelépítési időre -- az összes vizsgált algoritmusra
+a \ref{fig:tls-handshake-all}. ábra mutatja be.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.88\textwidth]{figures/03_tls_handshake_latency.png}
+\caption{PQC TLS kézfogás latenciája CPU-korlát függvényében -- mind a 8 vizsgált algoritmus}
+\label{fig:tls-handshake-all}
+\end{figure}
+
+A \ref{fig:tls-handshake-all}. ábrán a legfontosabb megfigyelés az, hogy a BIKE variánsok
+(L1, L3, L5) kézfogás-latenciagörbéi szorosan az ML-KEM variánsok és X25519 görbéi mentén
+futnak: ESP32 szinten $\approx 870$--$1000$~ms, ipari átjárón $\approx 21$--$26$~ms.
+Ez az eredmény kulcsfontosságú az instabilitás értelmezéséhez: ha a BIKE kézfogás önmagában
+nem lassabb az ML-KEM-nél, akkor az MQTT szintű meghiúsulás oka nem egy egyszeri, lassú
+kézfogás, hanem a kézfogások \emph{ismétlődő elakadása} -- a stunnel újra és újra
+megpróbál kapcsolatot felépíteni, amely a BIKE dekóder belső állapotkezelési problémájából
+fakad, és a reconnect metrikában látható 4--7 esemény/futtatás formájában nyilvánul meg.
+
+A harmadik megfigyelés a \emph{kriptográfiai rugalmasságra} (cryptographic agility)
+vonatkozik, vagyis arra, hogy a rendszer mennyire könnyen képes algoritmust váltani.
+A labor architektúrájában ez a váltás rendkívül egyszerű: a \texttt{PQC\_ALG} környezeti
+változó módosítása és a konténerek újraindítása elegendő, image-újraépítés nem szükséges.
+Ez a tulajdonság IoT firmware-környezetben is megvalósítható, amennyiben az algoritmusparamétert
+egy biztonságos külső forrásból -- pl.\ OTA-frissítésen vagy megbízható bootloader
+konfiguráción keresztül -- lehet frissíteni. Ezzel a módszerrel a telepített eszközök egy jövőbeli
+algoritmuscserét helyszíni beavatkozás nélkül végre tudnak hajtani.
+
+\subsection{ML-KEM-768 és BIKE-L1 összehasonlító értékelése}
+
+A \ref{tab:comparison}. táblázat alapján az ML-KEM-768 a vizsgált IoT proxy-architektúrában minden mért dimenzió
+mentén előnyösebb a BIKE-L1-nél: kisebb kulcsméretek, stabil MQTT munkamenet, magasabb
+biztonsági szint és FIPS-szabványosítás. A BIKE előnye az alternatív matematikai alap
+(diverzitás), amelyre az esetleges jövőbeli rácsalapú kriptanalitikai áttörés ellen lehet
+hivatkozni, de ez jelenleg elméleti megfontolás; a bizonyított implementációs stabilitás
+és szabványosítás mérlegén az ML-KEM-768 egyértelműen vezet.
+
+\begin{table}[H]
+\centering
+\caption{ML-KEM-768 és BIKE-L1 összehasonlítása a mérések alapján}
+\label{tab:comparison}
+\begin{tabular}{lll}
+\hline
+\textbf{Szempont}                & \textbf{ML-KEM-768}          & \textbf{BIKE-L1} \\
+\hline
+MQTT steady-state latencia       & $p_{50} \approx 1{,}5$~ms    & nem mérhető \\
+MQTT stabilitás (0,026 mag)      & stabil ($\approx$0,17~msg/s) & instabil (0,11~msg/s) \\
+MQTT stabilitás (1,0 mag)        & stabil (0,20~msg/s)          & instabil (0,14~msg/s) \\
+IoT-csomópont RSS-memória        & $\approx 32$~MB              & $\approx 32$~MB \\
+Nyilvános kulcs mérete           & 1\,184~B                     & 1\,541~B \\
+Kapszula mérete                  & 1\,088~B                     & 1\,573~B \\
+NIST szabványosítás              & FIPS~203 (2024)              & 4.\ forduló, jelölt \\
+Matematikai alap                 & modul-LWE (rács)             & QC-MDPC kód \\
+Biztonsági szint                 & II (AES-192-ekviv.)          & I (AES-128-ekviv.) \\
+\hline
+\end{tabular}
+\end{table}
 
 %----------------------------------------------------------------------------
 \section{Az eredmények összefoglalása}
 %----------------------------------------------------------------------------
 
-% TODO: A fejezet fő megállapításainak rövid összegzése; előkészítés a javaslatok
-% fejezethez.
+A mérések négy fő megállapítást hoznak:
+
+\begin{enumerate}
+    \item \textbf{Az ML-KEM-768 alkalmazható IoT MQTT kommunikáció TLS-titkosítására}
+          anélkül, hogy mérhető steady-state publish-késleltetést okozna a klasszikus
+          X25519-hez képest; az MQTT $p_{50}$ latencia mindkét esetben $\approx 1{,}5$~ms.
+    \item \textbf{A CPU-korlát küszöbhatást mutat:} 0,25~mag felett a $p_{95}$ késleltetés
+          elfogadható (2--5~ms); 0,026~magon (ESP32 szint) mindkét algoritmusnál
+          166--235~ms-os $p_{95}$ értékek jelennek meg, amelyek a proxy CPU-éhezésére,
+          nem az algoritmusra vezethető vissza.
+    \item \textbf{A BIKE-L1 proxy-integráción belül operatív instabilitást mutat:}
+          a QoS~1 PUBACK-ok rendszeres elmaradása és az alacsonyabb üzenetküldési ráta
+          arra utal, hogy a BIKE TLS kézfogás a stunnel időtúllépési korlátait a vizsgált
+          CPU-konfiguráció mellett elérte.
+    \item \textbf{A PQC-overhead az IoT-csomópont memóriájában nem mérhető} a proxy
+          sidecar-architektúrának köszönhetően: az IoT-csomópont RSS-je érdemben
+          nem tér el az X25519-konfiguráció esetén mért értéktől ($\approx 32$~MB).
+\end{enumerate}
+
+Ezek a megállapítások megerősítik, hogy az ML-KEM-768 érett, telepíthető PQC megoldás
+az IoT MQTT kommunikáció védelmére, és a következő fejezetben javasolt migrációs stratégia
+alapját képezik.

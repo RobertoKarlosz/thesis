@@ -1,78 +1,439 @@
 \chapter{Mérések}
 
-Jelen fejezet a kísérleti mérések végrehajtását és a nyers adatok gyűjtésének folyamatát írja le.
-A mérések célja a CRYSTALS-Kyber és a BIKE algoritmusok futási idejének, memóriaigényének
-és --- ahol alkalmazható --- energiafogyasztásának meghatározása a korábban bemutatott
-tesztkörnyezetben.
+Jelen fejezet a kísérleti mérések végrehajtásának eredményeit tartalmazza. Összesen 40 futtatás történt (8 algoritmus $\times$
+5 CPU-korlát $\times$ 1 futtatás), mindegyik 300~másodpercig tartott, és mindegyikben
+három IoT-csomópont (\texttt{temperature-sensor-1}, \texttt{temperature-sensor-2}, \texttt{temperature-sensor-3}) párhuzamosan
+üzemelt. Az eredmények elsődleges forrása a \texttt{metrics\_export.txt} összefoglaló
+fájl és a Prometheus TSDB-pillanatképek.
 
 %----------------------------------------------------------------------------
-\section{Mérési forgatókönyvek}
+\section{MQTT publish-ciklus késleltetése -- X25519 (klasszikus referencia)}
 %----------------------------------------------------------------------------
 
-\subsection{Alap kriptográfiai műveletek mérése}
+Az X25519 (klasszikus Diffie--Hellman Curve25519) referenciamérések eredményei az
+\ref{tab:x25519-latency}. táblázatban láthatók.
 
-% TODO: Kulcsgenerálás (KeyGen), kapszulázás (Encapsulation) és visszafejtés (Decapsulation)
-% futási idejének izolált mérése — mindkét algoritmuson, különböző biztonsági szinteken
-% (Kyber-512/768/1024, BIKE-L1/L3/L5).
+\begin{table}[ht]
+\centering
+\caption{X25519 MQTT publish-ciklus késleltetés (ms) CPU-korlát szerint}
+\label{tab:x25519-latency}
+\begin{tabular}{lrrr}
+\hline
+\textbf{CPU-korlát} & \textbf{$p_{50}$ (ms)} & \textbf{$p_{95}$ (ms)} & \textbf{$p_{99}$ (ms)} \\
+\hline
+0,026 mag (ESP32)        & 1,68 & 165,9 & 452,2 \\
+0,12 mag (RPi Zero 2W)  & 1,56 &  49,0 &  86,8 \\
+0,25 mag (RPi 3B+)      & 1,53 &   4,2 &  75,6 \\
+0,5 mag (RPi 4B)        & 1,53 &   2,7 &  29,2 \\
+1,0 mag (Ipari átjáró)  & 1,50 &   2,2 &   7,5 \\
+\hline
+\end{tabular}
+\end{table}
 
-\subsection{TLS kézfogás (handshake) mérése}
+Az X25519-nél markáns küszöbhatás figyelhető meg a 0,12 és 0,25~mag között. A medián
+értéke ($\approx 1{,}50$--$1{,}68$~ms) stabil, a 0,25~mag feletti $p_{95}$
+($\approx 2{,}2$--$4{,}2$~ms) alacsony; a publish-ciklus latenciáját a helyi
+Docker-hálózati késleltetés és a QoS~1 PUBACK-ciklus dominálja, nem az algoritmus
+számítási igénye. Ez a klasszikus referenciamérés képezi az összehasonlítás alapját
+a következő fejezetekben vizsgált PQC algoritmusokhoz.
 
-% TODO: Teljes TLS 1.3 kézfogás időmérése PQC KEM-mel kombinálva (hibrid és tiszta PQC mód).
-% MQTT connect–publish–disconnect ciklus mérése.
-
-\subsection{Terheléses mérés}
-
-% TODO: Ismételt kézfogások szekvenciálisan és párhuzamosan — átviteli sebesség és
-% átlagos handshake-idő meghatározása terhelés alatt.
-
-%----------------------------------------------------------------------------
-\section{Mérési módszer és adatgyűjtés}
-%----------------------------------------------------------------------------
-
-\subsection{Időmérés megvalósítása}
-
-% TODO: Mérési könyvtár / syscall (clock_gettime, CLOCK_MONOTONIC), mérési iterációk száma,
-% statisztikai módszer (átlag, medián, szórás, kiugróértékek kizárása).
-
-\subsection{Memóriahasználat mérése}
-
-% TODO: Peak RSS / stack usage mérése (valgrind massif, /proc/\$PID/status, vagy
-% wolfSSL beépített memóriastatisztika).
-
-\subsection{Energiafogyasztás mérése}
-
-% TODO: Ha elvégezték: mérési pont, mintavételezési frekvencia, mértékegység (mJ/művelet).
-% Ha nem: alfejezet elhagyható.
+Az üzenetküldési sebesség 0,026~magon $\approx 0{,}175$~msg/s, 0,12~mag felett minden
+konfigurációban $\approx 0{,}20$~msg/s; az összes csomópont stabil kapcsolatot tartott fenn.
 
 %----------------------------------------------------------------------------
-\section{Mérési eredmények}
+\section{ML-KEM algoritmusok MQTT mérési eredményei}
 %----------------------------------------------------------------------------
 
-\subsection{Kyber-512 eredmények}
-
-% TODO: KeyGen / Encap / Decap futási idő táblázat (ms), memória (kB), iterációk száma.
-
-\subsection{Kyber-768 és Kyber-1024 eredmények}
-
-% TODO: Ugyanaz magasabb biztonsági szinteken.
-
-\subsection{BIKE-L1 eredmények}
-
-% TODO: KeyGen / Encap / Decap futási idő, memória. Megjegyzés a dekódolási hibaarányról
-% (dekódolási valószínűség, esetleges újrapróbálkozások).
-
-\subsection{BIKE-L3 és BIKE-L5 eredmények}
-
-% TODO: Ugyanaz magasabb szinteken.
-
-\subsection{TLS kézfogás összesítő adatok}
-
-% TODO: Teljes handshake idő algoritmustípusonként, összehasonlítás RSA/ECDH referenciával.
+A CRYSTALS-Kyber algoritmuscsalád (NIST FIPS~203, ML-KEM) három biztonsági szinten --
+ML-KEM-512 (NIST~I.), ML-KEM-768 (NIST~II.) és ML-KEM-1024 (NIST~III.) --
+került vizsgálatra. Mindegyik variáns esetén minden CPU-szinten sikeresen rögzíthetők voltak az MQTT
+publish-ciklus késleltetési percentilisek. A csomópontok stabil QoS~1 kapcsolatot tartottak
+fenn, az \texttt{ack\_ratio} minden futtatásban $1{,}000$.
 
 %----------------------------------------------------------------------------
-\section{A mérések összefoglalása}
+\subsection{ML-KEM-512}
 %----------------------------------------------------------------------------
 
-% TODO: Rövid szöveges összegzés a nyers adatokról, kiemelve a legfontosabb tendenciákat
-% (melyik algoritmus volt gyorsabb / erőforrás-hatékonyabb), részletes elemzés nélkül
-% (az a következő fejezetbe kerül).
+Az ML-KEM-512 a legalacsonyabb biztonsági szintű ML-KEM variáns (NIST~I., AES-128-ekvivalens).
+Az \ref{tab:mlkem512-latency}. táblázat az MQTT publish-ciklus késleltetési percentilisek
+három csomópontra átlagolt értékeit mutatja CPU-korlát szerint.
+
+\begin{table}[ht]
+\centering
+\caption{ML-KEM-512 MQTT publish-ciklus késleltetés (ms) CPU-korlát szerint}
+\label{tab:mlkem512-latency}
+\begin{tabular}{lrrr}
+\hline
+\textbf{CPU-korlát} & \textbf{$p_{50}$ (ms)} & \textbf{$p_{95}$ (ms)} & \textbf{$p_{99}$ (ms)} \\
+\hline
+0,026 mag (ESP32)       & 1,64 & 179,3 & 323,1 \\
+0,12 mag (RPi Zero 2W)  & 1,56 &  71,3 & 118,7 \\
+0,25 mag (RPi 3B+)      & 1,53 &  22,4 &  55,6 \\
+0,5 mag (RPi 4B)        & 1,54 &   3,1 &  16,4 \\
+1,0 mag (Ipari átjáró)  & 1,50 &   2,2 &   5,4 \\
+\hline
+\end{tabular}
+\end{table}
+
+A $p_{50}$ medián értéke minden CPU-szinten $1{,}50$--$1{,}64$~ms között mozog,
+szintén CPU-független. A $p_{95}$ és $p_{99}$ percentilisek
+0,026~magon (179,3~ms és 323,1~ms) magasak, jelezve az ESP32 szintű CPU-szűkösség
+hatását a stunnel proxyn. A 0,25~magon az egyes csomópontok között széles szórás
+figyelhető meg: egyes csomópontoknál $p_{95}<3$~ms, míg másoknál 63~ms feletti értéket
+mértem, ami arra utal, hogy a küszöbhatár pontosan ennél a CPU-szintnél van. A 0,5~mag
+és 1,0~mag szinteken a $p_{95}$ már stabilan $\approx 2$--$3$~ms.
+
+A $p_{50}$--$p_{99}$ percentilissávok szélességét -- azaz a tipikus és a legrosszabb eset
+közötti különbséget -- az \ref{fig:percentile-bands}. ábra szemlélteti az ML-KEM-512 és az
+X25519 referencia adataira. A minta az összes vizsgált PQC variánsra jellemző.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{figures/02_percentile_bands_mlkem512_vs_x25519.png}
+\caption{MQTT publish-ciklus késleltetési percentilissávok -- ML-KEM-512 és X25519}
+\label{fig:percentile-bands}
+\end{figure}
+
+Az \ref{fig:percentile-bands}. ábrán jól látható, hogy a $p_{50}$ medián értéke (folytonos
+vonal) mindkét algoritmusnál minden CPU-szinten közel konstans, $\approx 1{,}5$~ms körül
+marad -- a sáv alsó határa alig változik. Az árnyalt terület (a $p_{50}$ és $p_{99}$
+közötti tartomány) ezzel szemben erősen CPU-függő: ESP32 szinten a sáv több mint két
+nagyságrendet ölel fel ($\approx 1{,}5$~ms-tól $\approx 330$~ms-ig ML-KEM-512 esetén,
+illetve $\approx 450$~ms-ig X25519 esetén), míg RPi~3B+ szinttől (0,25~mag) a sáv szinte
+összezárul. Ez a vizuális megjelenítés megerősíti a küszöbhatás meglétét: 0,25~mag felett
+a legrosszabb eset és a tipikus eset közötti különbség elhanyagolható.
+
+%----------------------------------------------------------------------------
+\subsection{ML-KEM-768}
+%----------------------------------------------------------------------------
+
+Az ML-KEM-768 (Kyber-768, NIST FIPS~203) algoritmus esetén minden CPU-szinten mind a
+három csomópontnál sikeresen rögzíthetők voltak a MQTT publish-ciklus késleltetési
+percentilisek. Az eredményeket a \ref{tab:mlkem-latency} táblázat foglalja össze. Az
+értékek egy futtatás három csomópontja (összesen három megfigyelés) számtani átlagai.
+
+\begin{table}[ht]
+\centering
+\caption{ML-KEM-768 MQTT publish-ciklus késleltetés (ms) CPU-korlát szerint}
+\label{tab:mlkem-latency}
+\begin{tabular}{lrrr}
+\hline
+\textbf{CPU-korlát} & \textbf{$p_{50}$ (ms)} & \textbf{$p_{95}$ (ms)} & \textbf{$p_{99}$ (ms)} \\
+\hline
+0,026 mag (ESP32)        & 1,65 & 235,4 & 482,6 \\
+0,12 mag (RPi Zero 2W)  & 1,53 &  56,8 &  91,4 \\
+0,25 mag (RPi 3B+)      & 1,54 &   4,1 &  80,9 \\
+0,5 mag (RPi 4B)        & 1,52 &   2,3 &   8,6 \\
+1,0 mag (Ipari átjáró)  & 1,52 &   2,2 &   6,6 \\
+\hline
+\end{tabular}
+\end{table}
+
+A $p_{50}$ medián értéke minden CPU-szinten közel azonos, $1{,}52$--$1{,}65$~ms között
+mozog, jelezve, hogy a tipikus (konfliktus-mentes) MQTT tranzakció nem érzékeny a
+CPU-korlát változására. A $p_{95}$ és $p_{99}$ percentilisek azonban erősen CPU-függők:
+0,026~magon (ESP32 szint) a $p_{95}$ közel 235~ms, a $p_{99}$ meghaladja a 482~ms-ot;
+ezek ritka, de nagy késleltetésű TLS-kézfogási torlódásokhoz köthetők az erősen
+korlátozott proxy konténerben. A 0,12~magra (RPi Zero 2W szint) való emelkedéssel a $p_{95}$
+57~ms-ra csökken; a 0,25~mag (RPi 3B+ szint) felett pedig markáns küszöbhatás figyelhető
+meg: a $p_{95}$ mindössze 4,1~ms-ra esik vissza, ami jelzi, hogy a proxy elegendő CPU-időt
+kap a stunnel-kapcsolat stabil fenntartásához.
+
+Az üzenetküldési sebesség 0,026~magon $\approx 0{,}168$~msg/s (kisebb torlódások miatt),
+0,12~mag felett azonban minden konfigurációban eléri a $\approx 0{,}20$~msg/s elméleti
+maximumot, ami pontosan megfelel az 5~s-es közzétételi intervallumnak.
+
+%----------------------------------------------------------------------------
+\subsection{ML-KEM-1024}
+%----------------------------------------------------------------------------
+
+Az ML-KEM-1024 a legmagasabb biztonsági szintű ML-KEM variáns (NIST~III., AES-256-ekvivalens).
+A \ref{tab:mlkem1024-latency}. táblázat a három csomópontra átlagolt késleltetési
+percentiliseket tartalmazza.
+
+\begin{table}[ht]
+\centering
+\caption{ML-KEM-1024 MQTT publish-ciklus késleltetés (ms) CPU-korlát szerint}
+\label{tab:mlkem1024-latency}
+\begin{tabular}{lrrr}
+\hline
+\textbf{CPU-korlát} & \textbf{$p_{50}$ (ms)} & \textbf{$p_{95}$ (ms)} & \textbf{$p_{99}$ (ms)} \\
+\hline
+0,026 mag (ESP32)       & 1,65 & 149,7 & 280,4 \\
+0,12 mag (RPi Zero 2W)  & 1,54 &  60,6 &  92,1 \\
+0,25 mag (RPi 3B+)      & 1,54 &   3,3 &  71,2 \\
+0,5 mag (RPi 4B)        & 1,53 &   3,2 &  50,2 \\
+1,0 mag (Ipari átjáró)  & 1,50 &   2,0 &   9,3 \\
+\hline
+\end{tabular}
+\end{table}
+
+Az ML-KEM-1024 esetén a $p_{95}$ küszöbhatása a 0,12--0,25~mag átmenetben van, az
+ML-KEM-768-cal megegyező módon. A $p_{99}$ a 0,25 és 0,5~magon ($\approx 71$~ms,
+illetve $\approx 50$~ms) valamivel magasabb az ML-KEM-768-éhoz ($\approx 81$~ms, illetve
+$\approx 9$~ms) képest, ami a nagyobb kulcsméretek ($1\,568$~B nyilvános kulcs,
+$1\,568$~B kapszula) miatti marginálisan magasabb TLS-rekordkezelési overhead-del
+magyarázható. 1,0~magon a $p_{99}$ $9{,}3$~ms-ra csökken, ami az ML-KEM-768
+$6{,}6$~ms-ához hasonló, és gyakorlatilag egyenértékű teljesítményt jelent.
+
+%----------------------------------------------------------------------------
+\section{X25519+ML-KEM-768 (hibrid)}
+%----------------------------------------------------------------------------
+
+Az X25519+ML-KEM-768 hibrid konfiguráció az X25519 klasszikus és az ML-KEM-768
+posztkvantum kulcscsere párhuzamos alkalmazása egyazon TLS kézfogáson belül,
+biztosítva, hogy az összeköttetés klasszikus és kvantum szempontból is biztonságos
+maradjon. A \ref{tab:hybrid-latency}. táblázat a három csomópontra átlagolt
+késleltetési értékeket mutatja.
+
+\begin{table}[ht]
+\centering
+\caption{X25519+ML-KEM-768 hibrid MQTT publish-ciklus késleltetés (ms) CPU-korlát szerint}
+\label{tab:hybrid-latency}
+\begin{tabular}{lrrr}
+\hline
+\textbf{CPU-korlát} & \textbf{$p_{50}$ (ms)} & \textbf{$p_{95}$ (ms)} & \textbf{$p_{99}$ (ms)} \\
+\hline
+0,026 mag (ESP32)       & 1,67 & 170,7 & 285,6 \\
+0,12 mag (RPi Zero 2W)  & 1,52 &  35,8 &  88,9 \\
+0,25 mag (RPi 3B+)      & 1,52 &   2,1 &  71,2 \\
+0,5 mag (RPi 4B)        & 1,52 &   2,4 &  18,7 \\
+1,0 mag (Ipari átjáró)  & 1,49 &   2,0 &   8,5 \\
+\hline
+\end{tabular}
+\end{table}
+
+A hibrid variáns viselkedése az ML-KEM-768-éhoz nagymértékben hasonló: a $p_{95}$
+küszöbhatása szintén a 0,12--0,25~mag sávban van. A 0,12~magon a $p_{95}$
+$\approx 35{,}8$~ms, ami alacsonyabb, mint az ML-KEM-768 $56{,}8$~ms-os értéke;
+ez az egyes csomópontok közötti mérési szórásból ered (az egyik szenzor már
+0,12~magon is $<5$~ms-os $p_{95}$-öt produkált). A $p_{99}$ a 0,25~magon
+$\approx 71$~ms, 0,5~magon $\approx 19$~ms, 1,0~magon $\approx 9$~ms. A hibrid
+megközelítés tehát nem jelent érzékelhető latencianövekedést az önálló ML-KEM-768-hoz
+képest, miközben klasszikus biztonsági garanciát is nyújt a posztkvantum migráció
+átmeneti időszakában.
+
+%----------------------------------------------------------------------------
+\section{BIKE algoritmusok mérési eredményei}
+%----------------------------------------------------------------------------
+
+A BIKE (Bit Flipping Key Encapsulation) algoritmuscsalád három biztonsági szinten --
+BIKE-L1 (NIST~I.), BIKE-L3 (NIST~III.) és BIKE-L5 (NIST~V.) -- vizsgálatra került.
+Mindhárom variáns esetén azonos jelenség figyelhető meg: a MQTT publish-ciklus
+késleltetési hisztogram minden CPU-korlát esetén kizárólag 30\,000~ms értékeket
+tartalmaz, és az újracsatlakozási szám minden futtatásban magas.
+
+%----------------------------------------------------------------------------
+\subsection{BIKE-L1}
+%----------------------------------------------------------------------------
+
+A BIKE-L1 (Bit Flipping Key Encapsulation, Level~1) futtatásai meglepő eredményt hoztak.
+A \texttt{metrics\_export.txt} összesítőben a BIKE-L1 csomópontok MQTT
+publish-ciklus késleltetési hisztogramja \emph{minden CPU-korlát esetén kizárólag
+30\,000~ms értékeket} tartalmaz; a $p_{50}$, $p_{95}$ és $p_{99}$ percentilisek egyaránt
+erre az értékre illeszkednek, ahogyan azt a \ref{tab:bikel1-latency}. és
+\ref{tab:bikel1-throughput}. táblázat CPU-korlát szerinti bontásban részletezi.
+
+\begin{table}[ht]
+\centering
+\caption{BIKE-L1 késleltetés és kapcsolatminőség CPU-korlát szerint}
+\label{tab:bikel1-latency}
+\begin{tabular}{lrrr}
+\hline
+\textbf{CPU-korlát} & \textbf{$p_{99}$ (ms)} & \textbf{ack\_ratio} & \textbf{reconn} \\
+\hline
+0,026 mag (ESP32)       & 30\,000 & -- & 4,6 \\
+0,12 mag (RPi Zero 2W)  & 30\,000 & -- & 6,2 \\
+0,25 mag (RPi 3B+)      & 30\,000 & -- & 5,5 \\
+0,5 mag (RPi 4B)        & 30\,000 & -- & 6,3 \\
+1,0 mag (Ipari átjáró)  & 30\,000 & -- & 5,6 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[ht]
+\centering
+\caption{BIKE-L1 áteresztőképesség és memóriahasználat CPU-korlát szerint}
+\label{tab:bikel1-throughput}
+\begin{tabular}{lrrr}
+\hline
+\textbf{CPU-korlát} & \textbf{Ráta (msg/s)} & \textbf{RSS (MB)} & \textbf{tmout/s} \\
+\hline
+0,026 mag (ESP32)       & $\approx 0{,}107$ & $\approx 32{,}5$ & 0,085 \\
+0,12 mag (RPi Zero 2W)  & $\approx 0{,}142$ & $\approx 32{,}6$ & 0,119 \\
+0,25 mag (RPi 3B+)      & $\approx 0{,}139$ & $\approx 32{,}6$ & 0,114 \\
+0,5 mag (RPi 4B)        & $\approx 0{,}160$ & $\approx 32{,}5$ & 0,133 \\
+1,0 mag (Ipari átjáró)  & $\approx 0{,}139$ & $\approx 32{,}4$ & 0,117 \\
+\hline
+\end{tabular}
+\end{table}
+
+A $p_{99} = 30\,000$~ms értéke a PUBACK-figyelő (\emph{reaper}) szálból ered: az IoT-csomópont
+háttérfolyamata 5~másodpercenként ellenőrzi a függőben lévő QoS~1 üzeneteket, és ha
+30~másodpercen belül nem érkezik PUBACK visszaigazolás (\texttt{PENDING\_TIMEOUT\_S=30}),
+az eltelt időt ($\approx 30\,000$~ms) rögzíti a hisztogramban, és növeli az
+\texttt{mqtt\_publish\_timeout\_total} számlálót. A hisztogram tehát \emph{nem üres}:
+minden egyes időtúllépési esemény a maximális 30\,000~ms értékkel jelenik meg.
+
+Az \texttt{ack\_ratio} \texttt{---} értéke azt mutatja, hogy egyetlen PUBACK sem érkezett
+vissza; a \texttt{paho-mqtt} kliens publish()-hívásokat kezdeményez (az \texttt{mqtt\_messages\_total}
+számláló növekszik), de az \texttt{on\_publish} visszahívás nem aktiválódik. Az üzenetküldési
+ráta ($0{,}107$--$0{,}160$~msg/s) szignifikánsan alacsonyabb az elvártnál ($0{,}20$~msg/s),
+és a magas újracsatlakozási szám (4,6--6,3 esemény futtatásonként; lásd \ref{fig:bike-diagnostics}. ábra)
+azt jelzi, hogy a stunnel-kapcsolat rendszeresen megszakad.
+
+A jelenség legvalószínűbb magyarázata, hogy a BIKE-L1 TLS-kézfogás a PQC proxy és a Mosquitto
+broker között olyan sokáig tart, hogy a stunnel-kapcsolat instabillá válik, és a csomópontok
+nem tudnak stabil QoS~1 MQTT-munkamenetet fenntartani. Ez CPU-szinttől \emph{független}:
+minden 0,026--1,0~mag tartományban megismételhető jelenség, ami arra utal, hogy a BIKE-L1
+kézfogási problémája nem pusztán CPU-hiányból ered.
+
+A memóriahasználat (RSS $\approx 32{,}4$--$32{,}6$~MB) BIKE-L1 esetén is azonos az ML-KEM-768
+és X25519 értékeivel, jelezve, hogy az eltérés nem memóriahiányból ered.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{figures/05_bike_diagnostics.png}
+\caption{BIKE kapcsolati instabilitás diagnosztikája -- reconnect események és üzenetküldési ráta}
+\label{fig:bike-diagnostics}
+\end{figure}
+
+Az \ref{fig:bike-diagnostics}. ábra bal panelje azt mutatja, hogy az újracsatlakozási
+események száma futtatásonként 4--7 között mozog minden BIKE variánsnál (L1, L3, L5) és
+minden CPU-szinten egyaránt -- ez CPU-korlátfüggetlen, folyamatos kapcsolatfelbomlásra
+utal. A jobb panel az üzenetküldési rátákat veti össze: a BIKE variánsok rátája
+($\approx 0{,}11$--$0{,}16$~msg/s) szignifikánsan elmarad mind az ML-KEM-512
+($\approx 0{,}17$--$0{,}20$~msg/s), mind az X25519 ($\approx 0{,}18$--$0{,}20$~msg/s)
+értékétől. Különösen szemléletes, hogy a BIKE ráta 1,0~magon sem éri el a referenciaszintet,
+ami kizárja a CPU-éhezést mint kizárólagos magyarázatot.
+
+%----------------------------------------------------------------------------
+\subsection{BIKE-L3}
+%----------------------------------------------------------------------------
+
+A BIKE-L3 (NIST~III.\ biztonsági szint, AES-192-ekvivalens) mérési eredményei a
+\ref{tab:bikel3-results}. táblázatban láthatók. A $p_{50}$, $p_{95}$ és $p_{99}$
+percentilisek minden CPU-szinten 30\,000~ms értéket mutatnak, az \texttt{ack\_ratio}
+minden esetben meghatározhatatlan (egyetlen PUBACK sem érkezett vissza).
+
+\begin{table}[ht]
+\centering
+\caption{BIKE-L3 mérési eredmények CPU-korlát szerint}
+\label{tab:bikel3-results}
+\begin{tabular}{lrrrr}
+\hline
+\textbf{CPU-korlát} & \textbf{Ráta (msg/s)} & \textbf{RSS (MB)} & \textbf{tmout/s} & \textbf{reconn} \\
+\hline
+0,026 mag (ESP32)       & $\approx 0{,}116$ & $\approx 32{,}7$ & 0,093 & 6,0 \\
+0,12 mag (RPi Zero 2W)  & $\approx 0{,}143$ & $\approx 30{,}9$ & 0,116 & 6,0 \\
+0,25 mag (RPi 3B+)      & $\approx 0{,}159$ & $\approx 32{,}1$ & 0,132 & 5,8 \\
+0,5 mag (RPi 4B)        & $\approx 0{,}161$ & $\approx 32{,}5$ & 0,134 & 6,3 \\
+1,0 mag (Ipari átjáró)  & $\approx 0{,}139$ & $\approx 32{,}4$ & 0,117 & 4,9 \\
+\hline
+\end{tabular}
+\end{table}
+
+A BIKE-L3 instabilitása azonos mintázatot mutat a BIKE-L1-gyel: az újracsatlakozások
+száma 4,9--6,3 esemény futtatásonként, az üzenetküldési ráta ($0{,}116$--$0{,}161$~msg/s)
+szignifikánsan elmarad a referenciaszinttől ($0{,}20$~msg/s), és a jelenség CPU-szinttől
+független. A 0,12~magon mért alacsonyabb RSS ($\approx 30{,}9$~MB) az adott futtatás
+egyedi mérési szórásának tudható be; az összes többi szinten az RSS $\approx 32$~MB.
+
+%----------------------------------------------------------------------------
+\subsection{BIKE-L5}
+%----------------------------------------------------------------------------
+
+A BIKE-L5 (NIST~V.\ biztonsági szint, AES-256-ekvivalens) a vizsgált BIKE variánsok
+közül a legmagasabb biztonsági szintű. A \ref{tab:bikel5-results}. táblázat
+az összesített mérési eredményeket tartalmazza.
+
+\begin{table}[ht]
+\centering
+\caption{BIKE-L5 mérési eredmények CPU-korlát szerint}
+\label{tab:bikel5-results}
+\begin{tabular}{lrrrr}
+\hline
+\textbf{CPU-korlát} & \textbf{Ráta (msg/s)} & \textbf{RSS (MB)} & \textbf{tmout/s} & \textbf{reconn} \\
+\hline
+0,026 mag (ESP32)       & $\approx 0{,}114$ & $\approx 32{,}4$ & 0,096 & 4,6 \\
+0,12 mag (RPi Zero 2W)  & $\approx 0{,}145$ & $\approx 32{,}5$ & 0,122 & 4,9 \\
+0,25 mag (RPi 3B+)      & $\approx 0{,}139$ & $\approx 32{,}5$ & 0,114 & 5,2 \\
+0,5 mag (RPi 4B)        & $\approx 0{,}159$ & $\approx 32{,}4$ & 0,135 & 5,2 \\
+1,0 mag (Ipari átjáró)  & $\approx 0{,}139$ & $\approx 32{,}5$ & 0,117 & 5,2 \\
+\hline
+\end{tabular}
+\end{table}
+
+A BIKE-L5 mérési képe a BIKE-L1 és BIKE-L3 variánsokéval teljes mértékben összhangban
+van: minden CPU-szinten 30\,000~ms-os $p_{99}$, nulla PUBACK visszaigazolás és
+4,6--5,2 újracsatlakozási esemény futtatásonként. Az üzenetküldési ráta
+($0{,}114$--$0{,}159$~msg/s) szintén szignifikánsan alacsonyabb az elvárt
+$0{,}20$~msg/s-nál. A három BIKE variáns összehasonlítása alapján a biztonsági szint
+emelése (L1 $\to$ L3 $\to$ L5) nem befolyásolja az instabilitás mértékét: az
+algoritmus proxy-szintű TLS-kézfogási problémája biztonsági szinttől független.
+
+%----------------------------------------------------------------------------
+\section{Memóriahasználat}
+%----------------------------------------------------------------------------
+
+Az összes vizsgált konfigurációban az IoT-csomópontok Python-folyamatainak RSS-memóriája
+\textbf{$32{,}0$--$32{,}6$} MB között mozog, és sem az algoritmustól, sem a CPU-korlát
+értékétől nem függ szignifikánsan. Ezt a \ref{tab:memory} táblázat foglalja össze.
+
+\begin{table}[ht]
+\centering
+\caption{Átlagos RSS-memória (MB) algoritmus és CPU-korlát szerint}
+\label{tab:memory}
+\begin{tabular}{lrrrrr}
+\hline
+\textbf{Algoritmus} & \textbf{0,026 mag} & \textbf{0,12 mag} & \textbf{0,25 mag} & \textbf{0,5 mag} & \textbf{1,0 mag} \\
+\hline
+ML-KEM-768 & 32,3 & 32,3 & 32,4 & 32,3 & 32,3 \\
+BIKE-L1    & 32,5 & 32,6 & 32,6 & 32,5 & 32,4 \\
+X25519     & 32,3 & 32,0 & 32,4 & 32,2 & 32,2 \\
+\hline
+\end{tabular}
+\end{table}
+
+A $\approx 32$~MB RSS a Python~3.12 interpreter, a betöltött könyvtárak (\texttt{paho-mqtt},
+\texttt{prometheus\_client}, \texttt{psutil}) és az MQTT-kliens futásidejű állapotát tükrözi.
+A PQC könyvtár (liboqs) által igényelt kiegészítő memória az IoT-csomópontnál nem mérhető,
+mivel a csomópont maga nem tölt be liboqs-t -- a PQC számítás a proxy konténerben (stunnel
++ oqs-provider) zajlik, az IoT-csomópont számára transzparensen.
+
+%----------------------------------------------------------------------------
+\section{Az átlagos $p_{99}$ késleltetés összefoglalása}
+%----------------------------------------------------------------------------
+
+Az összes futtatásra és csomópontra aggregált átlagos $p_{99}$ MQTT publish-ciklus
+késleltetés:
+
+\begin{itemize}
+    \item \textbf{ML-KEM-768:} $134{,}00$~ms (15 csomópontmegfigyelésből: 5 CPU-szint $\times$ 3 csomópont)
+    \item \textbf{X25519:} $130{,}25$~ms (15 csomópontmegfigyelésből)
+    \item \textbf{BIKE-L1:} $30\,000{,}00$~ms (15 csomópontmegfigyelés, minden eset PUBACK-időtúllépés)
+\end{itemize}
+
+Az ML-KEM-768 és az X25519 közötti $\approx 3{,}75$~ms különbség a $p_{99}$ szinten
+elsősorban a 0,026~magos futtatások magas szórásából ered (ML-KEM-768: $p_{99} \approx 483$~ms,
+X25519: $p_{99} \approx 452$~ms). A nagy CPU-korlát (0,5 és 1,0~mag) esetén az ML-KEM-768
+és X25519 $p_{99}$ értékei egymástól 20~ms-on belül vannak. A BIKE-L1 $30\,000$~ms-os
+aggregált átlaga a PUBACK-figyelő által rögzített folyamatos időtúllépéseket tükrözi, és
+nem a tényleges hálózati késleltetést jelenti. A teljes kísérletmátrix ($p_{99}$
+összes algoritmus $\times$ CPU-szint kombináción) az \ref{fig:p99-heatmap}-as ábrán, a hőtérképen
+tekinthető át.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.88\textwidth]{figures/06_p99_heatmap.png}
+\caption{$p_{99}$ MQTT latencia hőtérkép -- 8 algoritmus $\times$ 5 CPU-szint (ms)}
+\label{fig:p99-heatmap}
+\end{figure}
+
+A hőtérképen egyértelmű szerkezet látható. Az ML-KEM és X25519
+variánsok első oszlopa (ESP32, 0,026~mag) piros--sárga árnyalatú ($\approx 280$--$483$~ms),
+ami magas, de véges értékekre utal; a negyedik-ötödik oszloptól (RPi~4B és ipari átjáró)
+ezek mélyzöldre váltanak ($\approx 5$--$50$~ms). Ezzel szemben a három BIKE sor -- L1, L3
+és L5 -- teljes egészében egységesen sötétvörös és \textsc{timeout} feliratú: a 30\,000~ms
+értékek nem csökkennek a CPU-korlát növelésével, ami vizuálisan is megerősíti, hogy a
+BIKE instabilitása nem CPU-kapacitáshiányból fakad.

@@ -11,28 +11,98 @@
 
 \input{include/\AIdeclaration}
 
+%----------------------------------------------------------------------------
+\newpage
+\section{A laborkörnyezet forrásfájljai}
+%----------------------------------------------------------------------------
 
+A melléklet a \texttt{pqc-lab-forras.zip} tömörített archívumban érhető el, amely a \texttt{pqc-lab/} Docker-alapú laborkörnyezet teljes forráskódját tartalmazza -- a tanúsítványokat (\texttt{certs/}) és a mérési eredményeket (\texttt{experiment-results/}) kivéve. Az archívum könyvtárszerkezete a következő:
 
+\begin{lstlisting}[
+    float=false,
+    basicstyle=\small\ttfamily,
+    language={}
+]
+pqc-lab/
+|-- .env
+|-- docker-compose.yml
+|-- README.md
+|-- base-image/
+|   `-- Dockerfile
+|-- pqc-proxy/
+|   |-- Dockerfile
+|   |-- entrypoint.sh
+|   `-- stunnel.conf.template
+|-- mosquitto-oqs/
+|   |-- Dockerfile
+|   |-- entrypoint.sh
+|   |-- mosquitto.conf
+|   `-- stunnel-server.conf.template
+|-- iot-node/
+|   |-- Dockerfile
+|   |-- node.py
+|   `-- requirements.txt
+|-- prometheus/
+|   `-- prometheus.yml
+|-- grafana/
+|   `-- provisioning/
+|       |-- dashboards/
+|       |   |-- dashboard.yml
+|       |   `-- pqc-overview.json
+|       `-- datasources/
+|           `-- prometheus.yml
+`-- scripts/
+    |-- analyze_results.py
+    |-- export_metrics.py
+    |-- generate_certs.sh
+    `-- run_experiment.sh
+\end{lstlisting}
 
+Az alábbiakban röviden ismertetem az egyes könyvtárak tartalmát.
 
 %----------------------------------------------------------------------------
-%\section{A TeXstudio felülete}
+\subsection*{\texttt{.env} és \texttt{docker-compose.yml}}
 %----------------------------------------------------------------------------
-%\begin{figure}[!ht]
-%\centering
-%\includegraphics[width=150mm, keepaspectratio]{figures/TeXstudio.png}
-%\caption{A TeXstudio \LaTeX-szerkesztő.} 
-%\end{figure}
+
+A \texttt{.env} fájl a kísérlet futtatható paramétereit tartalmazza alapértelmezett értékekkel: a vizsgált PQC-algoritmust (\texttt{PQC\_ALG}), a CPU-korlátot (\texttt{CPU\_LIMIT}), az MQTT publish-intervallumot és az üzenetméretet. A \texttt{docker-compose.yml} írja le a teljes laborkörnyezet service-eit: a PQC alap image-et, a három IoT-csomópontot, a PQC proxyt, az MQTT brókert, valamint a Prometheus és Grafana megfigyelhetőségi stacket, beleértve a cAdvisor és node-exporter komponenseket.
 
 %----------------------------------------------------------------------------
-%\clearpage\section{Válasz az ,,Élet, a világmindenség, meg minden'' kérdésére}
+\subsection*{\texttt{base-image/}}
 %----------------------------------------------------------------------------
-%A Pitagorasz-tételből levezetve
-%\begin{align}
-%c^2=a^2+b^2=42.
-%\end{align}
-%A Faraday-indukciós törvényből levezetve
-%\begin{align}
-%\rot E=-\frac{dB}{dt}\hspace{1cm}\longrightarrow \hspace{1cm}
-%U_i=\oint\limits_\mathbf{L}{\mathbf{E}\mathbf{dl}}=-\frac{d}{dt}\int\limits_A{\mathbf{B}\mathbf{da}}=42.
-%\end{align}
+
+Az egyetlen \texttt{Dockerfile} Ubuntu~24.04 alapon fordítja le és telepíti a \texttt{liboqs} kvantumbiztos kriptográfiai könyvtárat, valamint az \texttt{oqs-provider} OpenSSL~3 providert. Ez az image szolgál minden PQC-képességet igénylő konténer (proxy, bróker) kiindulópontjaként.
+
+%----------------------------------------------------------------------------
+\subsection*{\texttt{pqc-proxy/}}
+%----------------------------------------------------------------------------
+
+A PQC proxy konténer a stunnel TLS-alagút kliens oldalát valósítja meg. A \texttt{stunnel.conf.template} sablonból az \texttt{entrypoint.sh} indítószkript állítja elő a futásidejű konfigurációt: behelyettesíti a \texttt{PQC\_ALG} környezeti változóból az aktuális algoritmus nevét a \texttt{curves} direktívába, elvégzi az OpenSSL TLS kézfogás-késleltetés-mérést, majd elindítja a stunnelt.
+
+%----------------------------------------------------------------------------
+\subsection*{\texttt{mosquitto-oqs/}}
+%----------------------------------------------------------------------------
+
+Az Eclipse Mosquitto MQTT bróker konténere, amelybe a stunnel TLS-alagút szerver oldala is integrálva van. A \texttt{mosquitto.conf} a bróker hálózati és hitelesítési paramétereit adja meg, a \texttt{stunnel-server.conf.template} pedig a TLS-terminációhoz szükséges sablont tartalmazza. Az \texttt{entrypoint.sh} generálja a végleges stunnel konfigurációt, majd párhuzamosan indítja el a stunnelt és a Mosquitto brókert.
+
+%----------------------------------------------------------------------------
+\subsection*{\texttt{iot-node/}}
+%----------------------------------------------------------------------------
+
+A szimulált IoT szenzorcsomópont Python-alapú implementációja. A \texttt{node.py} MQTT~QoS~1 üzeneteket publikál a proxyn keresztül, és Prometheus-kompatibilis metrikákat exportál: publish-ciklus késleltetési hisztogramot, PUBACK visszaigazolási arányt, újracsatlakozásszámot és RSS-memóriahasználatot. A \texttt{requirements.txt} felsorolja a szükséges Python-csomagokat (\texttt{paho-mqtt}, \texttt{prometheus-client}, \texttt{psutil}).
+
+%----------------------------------------------------------------------------
+\subsection*{\texttt{prometheus/} és \texttt{grafana/}}
+%----------------------------------------------------------------------------
+
+A \texttt{prometheus/prometheus.yml} konfigurálja a Prometheus gyűjtési célpontjait (IoT-csomópontok, cAdvisor, node-exporter). A \texttt{grafana/provisioning/} könyvtár tartalmazza a Grafana automatikus adatforrás-konfigurációját (\texttt{datasources/prometheus.yml}) és az előre elkészített PQC-áttekintő dashboardot (\texttt{dashboards/pqc-overview.json}).
+
+%----------------------------------------------------------------------------
+\subsection*{\texttt{scripts/}}
+%----------------------------------------------------------------------------
+
+\begin{itemize}
+    \item \texttt{generate\_certs.sh} -- ECDSA P-256 tanúsítványlánc generálása (CA + szerver) az stunnel TLS-kapcsolathoz.
+    \item \texttt{run\_experiment.sh} -- az összes algoritmus $\times$ CPU-szint kombináció automatikus, szekvenciális futtatása; minden kísérlet előtt újraindul a labor.
+    \item \texttt{export\_metrics.py} -- a Prometheus HTTP API-n keresztül lekérdezi és fájlba menti az összes releváns metrikát a kísérlet végeztével.
+    \item \texttt{analyze\_results.py} -- offline eredményelemzés és diagramgenerálás a mentett metrikaexportból.
+\end{itemize}

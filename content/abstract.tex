@@ -8,7 +8,13 @@
 %----------------------------------------------------------------------------
 \chapter*{Kivonat}\addcontentsline{toc}{chapter}{Kivonat}
 
-Jelen dokumentum egy diplomaterv sablon, amely formai keretet ad a BME Villamosmérnöki és Informatikai Karán végző hallgatók által elkészítendő szakdolgozatnak és diplomatervnek. A sablon használata opcionális. Ez a sablon \LaTeX~alapú, a \emph{TeXLive} \TeX-implementációval és a PDF-\LaTeX~fordítóval működőképes.
+A kvantumszámítógépek fejlődése közvetlen fenyegetést jelent a jelenleg széles körben alkalmazott nyilvános kulcsú kriptográfiai rendszerekre. Az IoT-eszközök különösen sérülékenyek, mivel hosszú üzemidejük alatt a ma rögzített titkosított forgalom egy jövőbeli kvantumszámítógéppel visszafejthető lehet -- ezt a \emph{harvest now, decrypt later} támadási modell írja le. Dolgozatomban azt vizsgálom, hogy a NIST által 2024-ben szabványosított ML-KEM (CRYSTALS-Kyber, FIPS~203) posztkvantum kulcscsere-algoritmus alkalmazható-e erőforrás-korlátozott IoT-eszközök MQTT alapú kommunikációjának védelmére anélkül, hogy az elfogadható késleltetési határokat átlépné.
+
+A kísérleti platform Docker Compose alapú, konténerizált labor, amelyben három szimulált IoT-csomópont stunnel sidecar proxyn, PQC-TLS~1.3 kapcsolaton keresztül publikál MQTT~QoS~1 üzeneteket egy Eclipse Mosquitto brokernek. A CPU-korlátot öt szinten állítottam be (0,026 --1,0 mag), amelyek sorban az ESP32, a Raspberry~Pi~Zero~2W, a~3B+, a~4B és egy ipari átjáró számítási teljesítményét modellezik. Az összes mért metrikát -- köztük a publish-ciklus késleltetési hisztogramokat, az újracsatlakozásszámot és az RSS-memóriát -- Prometheus gyűjtötte, Grafana vizualizálta.
+
+A mérések négy fő eredményt hoztak. Egyrészt az ML-KEM-768 és az X25519 steady-state MQTT publish-késleltetése szignifikánsan nem különbözik. A $p_{50}$ mindkét esetben $\approx 1{,}5$~ms, a $p_{99}$ 1,0~magon 7--8~ms. Másrészt a CPU-szint erős küszöbhatást mutat: 0,25~mag felett a $p_{95}$ 2--5~ms alá esik, míg 0,026~magon 166--235~ms-ra nő -- ez a stunnel proxy CPU-éhezéséhez, nem a PQC-algoritmus számítási igényéhez köthető. Valamint a BIKE (QC-MDPC alapú) algoritmuscsalád minden vizsgált szinten (L1, L3, L5) teljes PUBACK-hiányt és rendszeres kapcsolatfelbomlást mutatott, ami a jelenlegi stunnel architektúrával nem kompatibilis. Végül azt figyeltem meg, hogy az IoT-csomópont memóriahasználata (RSS~$\approx 32$~MB) algoritmusfüggetlen, mivel a PQC-számítás a proxy oldalán zajlik.
+
+Az eredmények alapján az ML-KEM-768 jól implementált, telepíthető megoldás az IoT~MQTT kommunikáció kvantumbiztos védelmére, feltéve, hogy a biztonsági proxy legalább Raspberry~Pi~3B+ szintű CPU-kapacitással rendelkezik.
 
 
 \vfill
@@ -20,7 +26,13 @@ Jelen dokumentum egy diplomaterv sablon, amely formai keretet ad a BME Villamosm
 %----------------------------------------------------------------------------
 \chapter*{Abstract}\addcontentsline{toc}{chapter}{Abstract}
 
-This document is a \LaTeX-based skeleton for BSc/MSc~theses of students at the Electrical Engineering and Informatics Faculty, Budapest University of Technology and Economics. The usage of this skeleton is optional. It has been tested with the \emph{TeXLive} \TeX~implementation, and it requires the PDF-\LaTeX~compiler.
+The advancement of quantum computing poses a direct threat to widely deployed public-key cryptographic systems. IoT devices are particularly vulnerable: due to their long operational lifetimes, encrypted traffic captured today may be decrypted by a future quantum computer -- a threat model known as \emph{harvest now, decrypt later}. This thesis investigates whether ML-KEM (CRYSTALS-Kyber, NIST FIPS~203), the post-quantum key encapsulation mechanism standardised in 2024, can protect MQTT-based communication of resource-constrained IoT devices without exceeding acceptable latency bounds.
+
+The experimental platform is a Docker Compose laboratory in which three simulated IoT nodes publish MQTT~QoS~1 messages to an Eclipse Mosquitto broker over PQC-TLS~1.3 connections, mediated by a stunnel sidecar proxy. CPU limits were set at five levels (0.026--1.0 cores), modelling the compute capacity of an ESP32, Raspberry~Pi~Zero~2W, 3B+, 4B, and an industrial gateway, respectively. All metrics -- including publish-cycle latency histograms, reconnect counts, and RSS memory -- were collected by Prometheus and visualised in Grafana.
+
+Four main findings emerged. First, the steady-state MQTT publish latency of ML-KEM-768 and X25519 does not differ significantly. The $p_{50}$ is $\approx 1.5$~ms for both, and the $p_{99}$ at 1.0~core is 7--8~ms. Second, CPU level exhibits a pronounced threshold effect: above 0.25~cores the $p_{95}$ falls below 2--5~ms, while at 0.026~cores it rises to 166--235~ms -- attributable to CPU starvation of the stunnel proxy, not to the PQC algorithm itself. Furthermore, the BIKE (QC-MDPC-based) algorithm family exhibited complete PUBACK loss and frequent reconnections at all tested security levels (L1, L3, L5), rendering it incompatible with the current stunnel architecture. Finally, I observed that IoT node memory usage (RSS~$\approx 32$~MB) is algorithm-independent, as all PQC computation is offloaded to the proxy.
+
+The results demonstrate that ML-KEM-768 is a well-implemented, deployable solution for quantum-safe protection of IoT MQTT communication, provided the security proxy has at least Raspberry~Pi~3B+-level CPU capacity.
 
 
 \vfill

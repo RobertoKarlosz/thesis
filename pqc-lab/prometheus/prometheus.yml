@@ -1,0 +1,43 @@
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+  external_labels:
+    lab: pqc-iot-lab
+
+scrape_configs:
+  - job_name: iot_nodes
+    static_configs:
+      - targets:
+          - temperature-sensor-1:9100
+          - temperature-sensor-2:9100
+          - temperature-sensor-3:9100
+        labels:
+          role: iot_node
+
+  - job_name: pqc_proxy
+    static_configs:
+      - targets:
+          - pqc-proxy-a:9101
+          - pqc-proxy-b:9101
+          - pqc-proxy-c:9101
+        labels:
+          role: pqc_proxy
+
+  - job_name: cadvisor
+    static_configs:
+      - targets:
+          - cadvisor:8080
+        labels:
+          role: cadvisor
+
+  - job_name: node_exporter
+    static_configs:
+      - targets:
+          - node-exporter:9100
+        labels:
+          role: host
+
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - localhost:9090

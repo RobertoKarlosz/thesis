@@ -1,0 +1,25 @@
+; stunnel TLS szerver – lezárja a pqc-proxy kliensektől érkező PQC-TLS kapcsolatokat
+; A PQC_ALG értéket az envsubst helyettesíti be a konténer indításakor
+
+foreground = yes
+debug = 4
+syslog = no
+output = /dev/stdout
+
+pid = /run/stunnel/stunnel-server.pid
+
+[mqtt-pqc-server]
+; PQC-TLS kapcsolatok fogadása a pqc-proxy kliensektől
+accept = 0.0.0.0:8883
+; Sima MQTT forgalom továbbítása a mosquitto-ra a loopback interfészen
+connect = 127.0.0.1:1883
+
+cert = /certs/server.crt
+key  = /certs/server.key
+
+sslVersion = TLSv1.3
+; Explicit csoportlista – közvetlenül az SSL_CTX_set1_groups_list() hívást alkalmazza,
+; megkerülve az openssl.cnf ssl_conf alapértelmezési problémáit.
+curves = ${PQC_ALG}
+
+TIMEOUTclose = 0

@@ -7,47 +7,41 @@
 
 \noindent $\Box$ \textbf{Nem használtam} semmilyen generatív MI segédeszközt.
 
-\noindent $\Box$ \textbf{Használtam} generatív MI segédeszközt. Az MI-vel generált tartalmakat ellenőriztem, a generált kimenetek valóságtartalmáról meggyőződtem, az alábbi táblázatban megfelelően jelöltem minden használatot.
+\noindent $\boxtimes$ \textbf{Használtam} generatív MI segédeszközt. Az MI-vel generált tartalmakat ellenőriztem, a generált kimenetek valóságtartalmáról meggyőződtem, az alábbi táblázatban megfelelően jelöltem minden használatot.
 
-\small{\noindent
+\begin{center}\small
 	\begin{tabular}{|c|c|c|c|}\hline
-		\hspace{40mm} & \hspace{30mm} & \hspace{30mm} & \hspace{30mm} \\ 
+		\hspace{40mm} & \hspace{30mm} & \hspace{30mm} & \hspace{30mm} \\
 		\textbf{Felhasználási módok}	& \textbf{Generatív MI} 	& \textbf{Érintett részek} 	& \textbf{Használat becsült} \\
-		& \textbf{eszköz(ök) neve} & (fejezet, oldalszám, & \textbf{aránya} (felhasználási \\ 
+		& \textbf{eszköz(ök) neve} & (fejezet, oldalszám, & \textbf{aránya} (felhasználási \\
 		& & hivatkozás) & módonként) \\
 		\hspace{40mm} & \hspace{30mm} & \hspace{30mm} & \hspace{30mm} \\ \hline \hline
-		Irodalomkutatás & & & \\ \hline
-		\textbf{Prompt lényegi része}  &\multicolumn{3}{|l|}{} \\ \hline \hline
-		Programkód generálása & & & \\ \hline
-		\textbf{Prompt lényegi része } & \multicolumn{3}{|l|}{} \\ \hline \hline
-		Új ötletek, megoldási & & & \\ 
-		javaslatok generálása & & & \\ \hline
-		\textbf{Prompt lényegi része}  &\multicolumn{3}{|l|}{} \\ \hline \hline
-		Vázlat létrehozása & & & \\
-		(szövegstruktúra, & & & \\ 
-		vázlatpontok) & & & \\ \hline
-		\textbf{Prompt lényegi része}  &\multicolumn{3}{|l|}{} \\ \hline \hline
-		Szövegblokkok létrehozása & & & \\ \hline
-		\textbf{Prompt lényegi része}  &\multicolumn{3}{|l|}{} \\ \hline \hline
-		Képek generálása & & & \\
-		illusztrációs célból & & & \\ \hline
-		\textbf{Prompt lényegi része}  &\multicolumn{3}{|l|}{} \\ \hline \hline
-		Adatvizualizáció, & & & \\
-		grafikonok generálása & & & \\
-		adatpontok alapján & & & \\ \hline
-		\textbf{Prompt lényegi része}  &\multicolumn{3}{|l|}{} \\ \hline \hline
-		Prezentáció készítése & & & \\ \hline
-		\textbf{Prompt lényegi része}  &\multicolumn{3}{|l|}{} \\ \hline \hline
-		Egyéb (nevezze meg) & & & \\ \hline
-		\textbf{Prompt lényegi része}  &\multicolumn{3}{|l|}{} \\ \hline
-		\multicolumn{3}{|l|}{\textbf{Összesített százalékos érték (a feladat érdemi részére nézve):}} & \\ \hline
-		\multicolumn{4}{|l|}{\textbf{Összesített érték rövid, szöveges indoklása:}} \\ 
-		\multicolumn{4}{|l|}{} \\ 
-		\multicolumn{4}{|l|}{} \\
-		\multicolumn{4}{|l|}{} \\
-		\multicolumn{4}{|l|}{} \\ \hline
-		
+		Irodalomkutatás & -- & -- & -- \\ \hline
+		\textbf{Prompt lényegi része} & \multicolumn{3}{|c|}{--} \\ \hline \hline
+		Programkód generálása & \parbox[c]{28mm}{\centering Claude Code\\(Anthropic)} & \parbox[c]{28mm}{\centering F.1.~melléklet (Dockerfile-ok, shell és python szkriptek)} & 60\% \\ \hline
+		\textbf{Prompt lényegi része} & \multicolumn{3}{|c|}{\parbox[c]{85mm}{\centering Készíts egy hálózatot 3 IoT noddal, proxy-val és az MQTT brokerrel. Csatold össze egy Prometheus serverrel és Grafana dashboarddal.}} \\ \hline \hline
+		\parbox[c]{38mm}{\centering Új ötletek, megoldási javaslatok generálása} & \parbox[c]{28mm}{\centering Claude Code\\(Anthropic)} & \parbox[c]{28mm}{\centering 4. fejezet (laborkörnyezet tervezése)} & 10\% \\ \hline
+		\textbf{Prompt lényegi része} & \multicolumn{3}{|c|}{\parbox[c]{85mm}{\centering Mutass olyan docker image-eket, amelyek IoT kommunikációban használatosak.}} \\ \hline \hline
+		\parbox[c]{38mm}{\centering Vázlat létrehozása (szövegstruktúra, vázlatpontok)} & -- & -- & -- \\ \hline
+		\textbf{Prompt lényegi része} & \multicolumn{3}{|c|}{--} \\ \hline \hline
+		Szövegblokkok létrehozása & -- & -- & -- \\ \hline
+		\textbf{Prompt lényegi része} & \multicolumn{3}{|c|}{--} \\ \hline \hline
+		\parbox[c]{38mm}{\centering Képek generálása illusztrációs célból} & -- & -- & -- \\ \hline
+		\textbf{Prompt lényegi része} & \multicolumn{3}{|c|}{--} \\ \hline \hline
+		\parbox[c]{38mm}{\centering Adatvizualizáció, grafikonok generálása adatpontok alapján} & \parbox[c]{28mm}{\centering Claude Code\\(Anthropic)} & \parbox[c]{28mm}{\centering 5. és 6. fejezet (ábrák)} & 80\% \\ \hline
+		\textbf{Prompt lényegi része} & \multicolumn{3}{|c|}{Készíts ábrákat a Prometheus adatokból.} \\ \hline \hline
+		Prezentáció készítése & -- & -- & -- \\ \hline
+		\textbf{Prompt lényegi része} & \multicolumn{3}{|c|}{--} \\ \hline \hline
+		Egyéb (nevezze meg) & -- & -- & -- \\ \hline
+		\textbf{Prompt lényegi része} & \multicolumn{3}{|c|}{--} \\ \hline
+		\multicolumn{3}{|l|}{\textbf{Összesített százalékos érték (a feladat érdemi részére nézve):}} & 25\% \\ \hline
+		\multicolumn{4}{|l|}{\textbf{Összesített érték rövid, szöveges indoklása:}} \\
+		\multicolumn{4}{|l|}{A generatív MI a laborkörnyezet PQC-mentes vázának (Docker Compose struktúra, alapszolgáltatások)} \\
+		\multicolumn{4}{|l|}{és az adatvizualizációs ábrák elkészítésében nyújtott segítséget. A PQC-specifikus komponensek} \\
+		\multicolumn{4}{|l|}{(liboqs, oqs-provider, stunnel konfiguráció), a mérések elemzése és a szöveges tartalom önálló munka.} \\
+		\multicolumn{4}{|l|}{Az AI által generált kódokat és ábrákat minden esetben ellenőriztem és szükség szerint módosítottam.} \\ \hline
+
 	\end{tabular}
-} % end of \small
+\end{center}
 
 
